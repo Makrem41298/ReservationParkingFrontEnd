@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react';
 import { userAPI } from '../userAPI';
 import { ACCOUNT_STATUS } from '../../../constants/roles';
+import { useAuth } from '../../../context/AuthContext';
+import UserModal from '../components/UserModal';
 
 export default function UsersListPage() {
+  const { isSuperAdmin } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [toggling, setToggling] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
     fetchUsers();
@@ -41,6 +46,50 @@ export default function UsersListPage() {
     }
   };
 
+  const handleOpenModal = (user = null) => {
+    setSelectedUser(user);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedUser(null);
+    setIsModalOpen(false);
+  };
+
+  const handleSubmitModal = async (data, id) => {
+    try {
+      if (id) {
+        // Update user
+        const response = await userAPI.updateUser(id, data);
+        if (response.data && response.data.id) {
+           setUsers(users.map(u => u.id === id ? response.data : u));
+        } else {
+           fetchUsers(); // Refresh to get updated data if backend doesn't return full user
+        }
+      } else {
+        // Create Admin
+        const response = await userAPI.createAdmin(data);
+        if (response.data) {
+           setUsers([response.data, ...users]);
+        } else {
+           fetchUsers();
+        }
+      }
+      handleCloseModal();
+    } catch (err) {
+      console.error('Validation Error response:', err.response?.data);
+      const errorData = err.response?.data;
+      let errorMsg = 'Failed to save user';
+      if (errorData?.message) {
+        errorMsg = Array.isArray(errorData.message) ? errorData.message.join(', ') : errorData.message;
+      } else if (errorData?.error) {
+        errorMsg = errorData.error;
+      }
+      setError(errorMsg);
+      throw err;
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -56,6 +105,17 @@ export default function UsersListPage() {
           <h1 className="text-2xl font-bold text-dark-900">Users Management</h1>
           <p className="text-dark-500 mt-1">{users.length} users total</p>
         </div>
+        {isSuperAdmin && (
+          <button
+            onClick={() => handleOpenModal(null)}
+            className="px-4 py-2 bg-primary-600 text-white font-medium rounded-xl hover:bg-primary-700 shadow-sm shadow-primary-500/20 transition-all cursor-pointer flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Create Admin
+          </button>
+        )}
       </div>
 
       {error && (
@@ -111,21 +171,32 @@ export default function UsersListPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <button
-                      onClick={() => toggleStatus(u)}
-                      disabled={toggling === u.id}
-                      className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-50 ${
-                        u.accountStatus === 'ACTIVE'
-                          ? 'bg-danger-500/10 text-danger-600 hover:bg-danger-500/20'
-                          : 'bg-accent-500/10 text-accent-600 hover:bg-accent-500/20'
-                      }`}
-                    >
-                      {toggling === u.id
-                        ? '...'
-                        : u.accountStatus === 'ACTIVE'
-                        ? 'Block'
-                        : 'Activate'}
-                    </button>
+                    <div className="flex items-center gap-2">
+			<button
+                        onClick={() => handleOpenModal(u)}
+                        className="p-1.5 text-dark-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors cursor-pointer"
+                        title="Edit User"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => toggleStatus(u)}
+                        disabled={toggling === u.id}
+                        className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-50 ${
+                          u.accountStatus === 'ACTIVE'
+                            ? 'bg-danger-500/10 text-danger-600 hover:bg-danger-500/20'
+                            : 'bg-accent-500/10 text-accent-600 hover:bg-accent-500/20'
+                        }`}
+                      >
+                        {toggling === u.id
+                          ? '...'
+                          : u.accountStatus === 'ACTIVE'
+                          ? 'Block'
+                          : 'Activate'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -136,6 +207,14 @@ export default function UsersListPage() {
           <div className="p-8 text-center text-dark-400">No users found</div>
         )}
       </div>
+
+      <UserModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onSubmit={handleSubmitModal}
+        user={selectedUser}
+        isSuperAdmin={isSuperAdmin}
+      />
     </div>
   );
 }

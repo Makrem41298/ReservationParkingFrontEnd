@@ -67,7 +67,7 @@ function App() {
             <Route
               path="/users"
               element={
-                <RoleRoute roles={[ROLES.ADMIN]}>
+                <RoleRoute roles={[ROLES.ADMIN, ROLES.SUPER_ADMIN]}>
                   <UsersListPage />
                 </RoleRoute>
               }
@@ -75,7 +75,7 @@ function App() {
             <Route
               path="/plans"
               element={
-                <RoleRoute roles={[ROLES.ADMIN]}>
+                <RoleRoute roles={[ROLES.ADMIN, ROLES.SUPER_ADMIN]}>
                   <PlansListPage />
                 </RoleRoute>
               }

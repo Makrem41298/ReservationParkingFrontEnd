@@ -41,7 +41,8 @@ export function AuthProvider({ children }) {
     setUser(userData);
   };
 
-  const isAdmin = user?.role === ROLES.ADMIN;
+  const isSuperAdmin = user?.role === ROLES.SUPER_ADMIN;
+  const isAdmin = user?.role === ROLES.ADMIN || user?.role === ROLES.SUPER_ADMIN;
   const isClient = user?.role === ROLES.CLIENT;
   const isAuthenticated = !!token;
 
@@ -55,6 +56,7 @@ export function AuthProvider({ children }) {
         logout,
         updateUser,
         isAdmin,
+        isSuperAdmin,
         isClient,
         isAuthenticated,
       }}
