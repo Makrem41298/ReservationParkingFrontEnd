@@ -16,4 +16,7 @@ export const reclamationsAPI = {
 
   // Delete a reclamation
   delete: (id) => api.delete(`/reclamation/${id}`),
+
+
+  sendMessageAgent: (data) => api.post(`/agent`, data),
 };

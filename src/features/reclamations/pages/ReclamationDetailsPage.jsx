@@ -2,12 +2,15 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { reclamationsAPI } from '../reclamationsAPI';
+import SwitchLabels from '../../../components/switch';
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export default function ReclamationDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
-  
+
   const [reclamation, setReclamation] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -28,7 +31,12 @@ export default function ReclamationDetailsPage() {
   ]);
   const [chatInput, setChatInput] = useState('');
   const chatEndRef = useRef(null);
+  const [generalResponse, setGeneralResponse] = useState(false);
 
+  const handleSwitch = (event) => {
+    setGeneralResponse(event.target.checked);
+    console.log(generalResponse)
+  };
   const fetchReclamation = async () => {
     try {
       setLoading(true);
@@ -57,6 +65,7 @@ export default function ReclamationDetailsPage() {
     if (!replyText) return;
     try {
       setReplyLoading(true);
+
       await reclamationsAPI.update(id, {
         solution: replyText,
         status: status,
@@ -85,12 +94,18 @@ export default function ReclamationDetailsPage() {
     }
   };
 
-  const handleGenerateAIReply = () => {
-    // Static ai generation fallback
-    setReplyText(`Hello ${reclamation?.client?.firstName || 'User'},\n\nWe apologize for the inconvenience you experienced with: "${reclamation?.subject}".\nThe problem has been reported and resolved by our technical team.\n\nThank you for choosing ParkEase.\n\nBest Regards,\nSupport Team`);
+  const handleGenerateAIReply = async () => {
+
+    const response = await reclamationsAPI.sendMessageAgent({
+      question: reclamation.content,
+      userId: reclamation.clientId,
+      generationResponse: true,
+      generalResponse: generalResponse
+    });
+    setReplyText(response.data.answer)
   };
 
-  const handleAgentChat = (e) => {
+  const handleAgentChat = async (e) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
 
@@ -99,13 +114,26 @@ export default function ReclamationDetailsPage() {
     setChatMessages(newChat);
     setChatInput('');
 
+    console.log(chatMessages);
+    console.log(reclamation);
+
     // Simulate Agent response
+    const response = await reclamationsAPI.sendMessageAgent({
+      question: chatInput,
+      userId: reclamation.clientId,
+      generationResponse: false,
+      generalResponse: generalResponse
+
+
+    });
+
+    const answer = response.data.answer;
     setTimeout(() => {
       setChatMessages(prev => [
-        ...prev, 
-        { 
-          role: 'agent', 
-          text: `Here is a suggested reply:\n\nHello ${reclamation?.client?.firstName || 'User'},\nWe apologize for this incident regarding "${reclamation?.subject}". We have checked the system and resolved the barrier issue. Let us know if you still face any problems.\n\nRegards,\nSupport Team`
+        ...prev,
+        {
+          role: 'agent',
+          text: answer,
         }
       ]);
     }, 1000);
@@ -118,7 +146,6 @@ export default function ReclamationDetailsPage() {
   if (loading) return <div className="p-8 text-center text-dark-500">Loading details...</div>;
   if (error) return <div className="p-8 text-center text-danger-500">{error}</div>;
   if (!reclamation) return <div className="p-8 text-center text-dark-500">Reclamation not found.</div>;
-
   return (
     <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-8rem)]">
       {/* LEFT PANE: Reclamation Details & Official Reply */}
@@ -142,23 +169,21 @@ export default function ReclamationDetailsPage() {
               </p>
             </div>
           </div>
-          <span className={`px-3 py-1 inline-flex items-center gap-1.5 text-xs font-semibold rounded-full border ${
-            reclamation.status === 'RESOLVED'
+          <span className={`px-3 py-1 inline-flex items-center gap-1.5 text-xs font-semibold rounded-full border ${reclamation.status === 'RESOLVED'
               ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
               : reclamation.status === 'IN_PROGRESS'
-              ? 'bg-amber-50 text-amber-700 border-amber-200'
-              : reclamation.status === 'REJECTED'
-              ? 'bg-red-50 text-red-700 border-red-200'
-              : 'bg-slate-50 text-slate-700 border-slate-200'
-          }`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${
-              reclamation.status === 'RESOLVED' ? 'bg-emerald-500' :
-              reclamation.status === 'IN_PROGRESS' ? 'bg-amber-500 animate-pulse' :
-              reclamation.status === 'REJECTED' ? 'bg-red-500' : 'bg-slate-500'
-            }`}></span>
-            {reclamation.status === 'IN_PROGRESS' ? 'In Progress' : 
-             reclamation.status === 'RESOLVED' ? 'Resolved' : 
-             reclamation.status === 'REJECTED' ? 'Rejected' : reclamation.status}
+                ? 'bg-amber-50 text-amber-700 border-amber-200'
+                : reclamation.status === 'REJECTED'
+                  ? 'bg-red-50 text-red-700 border-red-200'
+                  : 'bg-slate-50 text-slate-700 border-slate-200'
+            }`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${reclamation.status === 'RESOLVED' ? 'bg-emerald-500' :
+                reclamation.status === 'IN_PROGRESS' ? 'bg-amber-500 animate-pulse' :
+                  reclamation.status === 'REJECTED' ? 'bg-red-500' : 'bg-slate-500'
+              }`}></span>
+            {reclamation.status === 'IN_PROGRESS' ? 'In Progress' :
+              reclamation.status === 'RESOLVED' ? 'Resolved' :
+                reclamation.status === 'REJECTED' ? 'Rejected' : reclamation.status}
           </span>
         </div>
 
@@ -176,7 +201,7 @@ export default function ReclamationDetailsPage() {
                 </button>
               )}
             </div>
-            
+
             {isEditing ? (
               <div className="space-y-3 mt-2">
                 <textarea
@@ -210,10 +235,12 @@ export default function ReclamationDetailsPage() {
             <h4 className="text-md font-bold text-dark-900 border-b border-dark-100 pb-2">
               {isAdmin ? 'Official Solution (Champ Reply)' : 'Admin Solution'}
             </h4>
-            
+
             {isAdmin ? (
               <div className="space-y-4">
                 <div className="relative">
+
+
                   <textarea
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
@@ -228,7 +255,48 @@ export default function ReclamationDetailsPage() {
                     ✨ Generate reply by agent
                   </button>
                 </div>
-                
+
+                <div className="mt-4 w-full p-4 bg-white border border-dark-200 rounded-xl overflow-auto">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      p: ({ children }) => (
+                        <p className="mb-2 text-sm leading-5">{children}</p>
+                      ),
+
+                      table: ({ children }) => (
+                        <div className="overflow-auto">
+                          <table className="w-auto text-xs border border-gray-300 border-collapse">
+                            {children}
+                          </table>
+                        </div>
+                      ),
+
+                      thead: ({ children }) => (
+                        <thead className="bg-gray-100 text-xs">{children}</thead>
+                      ),
+
+                      tr: ({ children }) => (
+                        <tr className="border-b border-gray-200">{children}</tr>
+                      ),
+
+                      th: ({ children }) => (
+                        <th className="border border-gray-300 px-2 py-1 text-left font-medium whitespace-nowrap">
+                          {children}
+                        </th>
+                      ),
+
+                      td: ({ children }) => (
+                        <td className="border border-gray-300 px-2 py-1 whitespace-nowrap">
+                          {children}
+                        </td>
+                      ),
+                    }}
+                  >
+                    {replyText || "Preview will appear here..."}
+                  </ReactMarkdown>
+                </div>
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <label className="text-sm font-medium text-dark-700">Set Status:</label>
@@ -242,7 +310,7 @@ export default function ReclamationDetailsPage() {
                       <option value="REJECTED">Rejected</option>
                     </select>
                   </div>
-                  
+
                   <button
                     onClick={handleSendReply}
                     disabled={replyLoading}
@@ -272,6 +340,14 @@ export default function ReclamationDetailsPage() {
                 ✨
               </div>
               <h3 className="text-white font-semibold">AI Assistant</h3>
+              <div className="ml-auto">
+                <SwitchLabels
+                  label="Generale response"
+                  checked={generalResponse}
+                  onChange={handleSwitch}
+                />
+
+              </div>
             </div>
             <span className="flex h-3 w-3 relative">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success-400 opacity-75"></span>
@@ -282,12 +358,11 @@ export default function ReclamationDetailsPage() {
           <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar">
             {chatMessages.map((msg, i) => (
               <div key={i} className={`flex flex-col ${msg.role === 'admin' ? 'items-end' : 'items-start'}`}>
-                <div 
-                  className={`max-w-[85%] p-3 rounded-2xl text-sm ${
-                    msg.role === 'admin' 
-                      ? 'bg-primary-600 text-white rounded-tr-sm' 
+                <div
+                  className={`max-w-[85%] p-3 rounded-2xl text-sm ${msg.role === 'admin'
+                      ? 'bg-primary-600 text-white rounded-tr-sm'
                       : 'bg-dark-800 text-dark-100 rounded-tl-sm border border-dark-700'
-                  }`}
+                    }`}
                 >
                   <p className="whitespace-pre-wrap leading-relaxed">{msg.text}</p>
                 </div>
@@ -315,8 +390,8 @@ export default function ReclamationDetailsPage() {
               className="flex-1 bg-dark-900 border border-dark-600 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500 transition"
               placeholder="Ask agent for a reply..."
             />
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={!chatInput.trim()}
               className="bg-accent-600 text-white px-4 py-2.5 rounded-xl hover:bg-accent-500 disabled:opacity-50 transition shadow-lg shadow-accent-600/20"
             >
