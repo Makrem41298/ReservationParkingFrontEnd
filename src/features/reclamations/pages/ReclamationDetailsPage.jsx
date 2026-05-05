@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { reclamationsAPI } from '../reclamationsAPI';
@@ -26,12 +26,37 @@ export default function ReclamationDetailsPage() {
   const [editLoading, setEditLoading] = useState(false);
 
   // Chat State
-  const [chatMessages, setChatMessages] = useState([
-    { role: 'agent', text: "Hello! I am your AI assistant. Need help crafting a reply for this reclamation?" }
-  ]);
+  const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const chatEndRef = useRef(null);
   const [generalResponse, setGeneralResponse] = useState(false);
+
+  // Resize State
+  const [chatWidth, setChatWidth] = useState(400);
+  const isResizing = useRef(false);
+
+  const handleMouseDown = useCallback((e) => {
+    isResizing.current = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+
+    const onMouseMove = (e) => {
+      if (!isResizing.current) return;
+      const newWidth = window.innerWidth - e.clientX;
+      setChatWidth(Math.min(700, Math.max(300, newWidth)));
+    };
+
+    const onMouseUp = () => {
+      isResizing.current = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  }, []);
 
   const handleSwitch = (event) => {
     setGeneralResponse(event.target.checked);
@@ -45,6 +70,8 @@ export default function ReclamationDetailsPage() {
       setReplyText(res.data.solution || '');
       setStatus(res.data.status || 'RESOLVED');
       setEditContent(res.data.content || '');
+
+      console.log("chat history" + res.data.conversationHistory);
       setError(null);
     } catch (err) {
       setError(err?.response?.data?.message || 'Failed to load reclamation details.');
@@ -52,7 +79,16 @@ export default function ReclamationDetailsPage() {
       setLoading(false);
     }
   };
+ 
 
+  useEffect(() => {
+    if (reclamation) {
+      setChatMessages([
+        { sender: 'IAMessage', message: "Hello! I am your AI assistant. Need help crafting a reply for this reclamation?" },
+        ...(reclamation.conversationHistory || [])
+      ]);
+    }
+  }, [reclamation]);
   useEffect(() => {
     fetchReclamation();
   }, [id]);
@@ -110,7 +146,7 @@ export default function ReclamationDetailsPage() {
     if (!chatInput.trim()) return;
 
     // Add Admin's msg
-    const newChat = [...chatMessages, { role: 'admin', text: chatInput }];
+    const newChat = [...chatMessages, { sender: 'HumanMessage', message: chatInput }];
     setChatMessages(newChat);
     setChatInput('');
 
@@ -120,7 +156,7 @@ export default function ReclamationDetailsPage() {
     // Simulate Agent response
     const response = await reclamationsAPI.sendMessageAgent({
       question: chatInput,
-      userId: reclamation.clientId,
+      reclamationId: reclamation.id,
       generationResponse: false,
       generalResponse: generalResponse
 
@@ -132,8 +168,8 @@ export default function ReclamationDetailsPage() {
       setChatMessages(prev => [
         ...prev,
         {
-          role: 'agent',
-          text: answer,
+          sender: "IAMessage",
+          message: answer,
         }
       ]);
     }, 1000);
@@ -333,7 +369,12 @@ export default function ReclamationDetailsPage() {
 
       {/* RIGHT PANE: Agent Sidebar (Admins Only) */}
       {isAdmin && (
-        <div className="w-full lg:w-[400px] flex flex-col bg-dark-900 rounded-2xl shadow-xl overflow-hidden border border-dark-800 shrink-0">
+        <div className="relative w-full flex flex-col bg-dark-900 rounded-2xl shadow-xl overflow-hidden border border-dark-800 shrink-0" style={{ width: chatWidth, minWidth: 300, maxWidth: 700 }}>
+          {/* Resize Handle */}
+          <div
+            onMouseDown={handleMouseDown}
+            className="absolute left-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-accent-500/40 transition-colors z-10"
+          />
           <div className="p-4 bg-dark-800 border-b border-dark-700 flex justify-between items-center">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-accent-500 flex items-center justify-center text-white font-bold shadow-lg shadow-accent-500/30">
@@ -357,18 +398,44 @@ export default function ReclamationDetailsPage() {
 
           <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar">
             {chatMessages.map((msg, i) => (
-              <div key={i} className={`flex flex-col ${msg.role === 'admin' ? 'items-end' : 'items-start'}`}>
+              <div key={i} className={`flex flex-col ${msg.sender === 'HumanMessage' ? 'items-end' : 'items-start'}`}>
                 <div
-                  className={`max-w-[85%] p-3 rounded-2xl text-sm ${msg.role === 'admin'
+                  className={`max-w-[85%] p-3 rounded-2xl text-sm ${msg.sender === 'HumanMessage'
                       ? 'bg-primary-600 text-white rounded-tr-sm'
                       : 'bg-dark-800 text-dark-100 rounded-tl-sm border border-dark-700'
                     }`}
                 >
-                  <p className="whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      p: ({ children }) => (
+                        <p className={`mb-1 text-sm leading-relaxed ${msg.sender === 'HumanMessage' ? 'text-white' : 'text-dark-100'}`}>{children}</p>
+                      ),
+                      table: ({ children }) => (
+                        <div className="overflow-auto my-2">
+                          <table className="w-auto text-xs border border-dark-600 border-collapse">{children}</table>
+                        </div>
+                      ),
+                      thead: ({ children }) => (
+                        <thead className="bg-dark-700 text-xs">{children}</thead>
+                      ),
+                      tr: ({ children }) => (
+                        <tr className="border-b border-dark-600">{children}</tr>
+                      ),
+                      th: ({ children }) => (
+                        <th className="border border-dark-600 px-2 py-1 text-left font-medium text-dark-100 whitespace-nowrap">{children}</th>
+                      ),
+                      td: ({ children }) => (
+                        <td className="border border-dark-600 px-2 py-1 text-dark-200 whitespace-nowrap">{children}</td>
+                      ),
+                    }}
+                  >
+                    {msg.message}
+                  </ReactMarkdown>
                 </div>
-                {msg.role === 'agent' && (
+                {msg.sender === 'IAMessage' && (
                   <button
-                    onClick={() => copyToReply(msg.text)}
+                    onClick={() => copyToReply(msg.message)}
                     className="mt-1 text-xs text-accent-400 hover:text-accent-300 font-medium px-1 flex items-center gap-1 transition"
                   >
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
