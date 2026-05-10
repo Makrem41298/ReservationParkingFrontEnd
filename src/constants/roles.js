@@ -35,3 +35,9 @@ export const SUBSCRIPTION_STATUS = {
   CANCELLED: 'CANCELLED',
   SUSPENDED: 'SUSPENDED',
 };
+
+export const MODE_RESPONSE = {
+  USER_RESPONSE: "user_response",
+  GENERAL_RESPONSE: "general_response",
+  RECLAMATION_RESPONSE: "reclamation_response"
+}

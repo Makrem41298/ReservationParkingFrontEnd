@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { reclamationsAPI } from '../reclamationsAPI';
+import { MODE_RESPONSE } from '../../../constants/roles';
 import SwitchLabels from '../../../components/switch';
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -29,7 +30,7 @@ export default function ReclamationDetailsPage() {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const chatEndRef = useRef(null);
-  const [generalResponse, setGeneralResponse] = useState(false);
+  const [modeResponse, setModeResponse] = useState(MODE_RESPONSE.GENERAL_RESPONSE);
 
   // Resize State
   const [chatWidth, setChatWidth] = useState(400);
@@ -59,8 +60,8 @@ export default function ReclamationDetailsPage() {
   }, []);
 
   const handleSwitch = (event) => {
-    setGeneralResponse(event.target.checked);
-    console.log(generalResponse)
+    setModeResponse(event.target.checked ? MODE_RESPONSE.GENERAL_RESPONSE : MODE_RESPONSE.USER_RESPONSE);
+    console.log(modeResponse)
   };
   const fetchReclamation = async () => {
     try {
@@ -130,15 +131,23 @@ export default function ReclamationDetailsPage() {
     }
   };
 
-  const handleGenerateAIReply = async () => {
+  const [generateLoading, setGenerateLoading] = useState(false);
 
-    const response = await reclamationsAPI.sendMessageAgent({
-      question: reclamation.content,
-      userId: reclamation.clientId,
-      generationResponse: true,
-      generalResponse: generalResponse
-    });
-    setReplyText(response.data.answer)
+  const handleGenerateAIReply = async () => {
+    try {
+      setGenerateLoading(true);
+      const response = await reclamationsAPI.sendMessageAgent({
+        question: reclamation.content,
+        reclamationId: reclamation.id,
+        modeResponse: MODE_RESPONSE.RECLAMATION_RESPONSE
+      });
+      setReplyText(response.data.answer);
+    } catch (err) {
+      console.error('Error generating AI reply:', err);
+      alert('Failed to generate AI reply. Please try again.');
+    } finally {
+      setGenerateLoading(false);
+    }
   };
 
   const handleAgentChat = async (e) => {
@@ -157,8 +166,7 @@ export default function ReclamationDetailsPage() {
     const response = await reclamationsAPI.sendMessageAgent({
       question: chatInput,
       reclamationId: reclamation.id,
-      generationResponse: false,
-      generalResponse: generalResponse
+      modeResponse: modeResponse
 
 
     });
@@ -286,9 +294,10 @@ export default function ReclamationDetailsPage() {
                   />
                   <button
                     onClick={handleGenerateAIReply}
-                    className="absolute bottom-3 right-3 flex items-center gap-1.5 px-3 py-1.5 bg-accent-50 text-accent-700 hover:bg-accent-100 border border-accent-100 rounded-lg text-xs font-bold transition shadow-sm"
+                    disabled={generateLoading}
+                    className="absolute bottom-3 right-3 flex items-center gap-1.5 px-3 py-1.5 bg-accent-50 text-accent-700 hover:bg-accent-100 border border-accent-100 rounded-lg text-xs font-bold transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    ✨ Generate reply by agent
+                    {generateLoading ? '⏳ Generating...' : '✨ Generate reply by agent'}
                   </button>
                 </div>
 
@@ -384,7 +393,7 @@ export default function ReclamationDetailsPage() {
               <div className="ml-auto">
                 <SwitchLabels
                   label="Generale response"
-                  checked={generalResponse}
+                  checked={modeResponse === MODE_RESPONSE.GENERAL_RESPONSE}
                   onChange={handleSwitch}
                 />
 
