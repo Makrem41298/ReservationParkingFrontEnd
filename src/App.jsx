@@ -30,6 +30,7 @@ import PlanParkingLotListPage from './features/planParkingLot/pages/PlanParkingL
 import SubscriptionsListPage from './features/subscriptions/pages/SubscriptionsListPage';
 import ReclamationsListPage from './features/reclamations/pages/ReclamationsListPage';
 import ReclamationDetailsPage from './features/reclamations/pages/ReclamationDetailsPage';
+import SettingsPage from './features/settings/pages/SettingsPage';
 
 function App() {
   return (
@@ -77,6 +78,14 @@ function App() {
               element={
                 <RoleRoute roles={[ROLES.ADMIN, ROLES.SUPER_ADMIN]}>
                   <PlansListPage />
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <RoleRoute roles={[ROLES.SUPER_ADMIN]}>
+                  <SettingsPage />
                 </RoleRoute>
               }
             />
