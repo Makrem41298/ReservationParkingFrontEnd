@@ -3,6 +3,8 @@ import { parkingLotAPI } from '../parkingLotAPI';
 import { tarifGridAPI } from '../../tarifGrid/tarifGridAPI';
 import { useAuth } from '../../../context/AuthContext';
 
+const API_BASE_URL = 'http://localhost:3000';
+
 export default function ParkingLotListPage() {
   const [lots, setLots] = useState([]);
   const [grids, setGrids] = useState([]);
@@ -10,6 +12,8 @@ export default function ParkingLotListPage() {
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const { isAdmin } = useAuth();
 
   const emptyForm = {
@@ -30,7 +34,7 @@ export default function ParkingLotListPage() {
     finally { setLoading(false); }
   };
 
-  const resetForm = () => { setForm(emptyForm); setEditing(null); setShowForm(false); };
+  const resetForm = () => { setForm(emptyForm); setEditing(null); setShowForm(false); setImageFile(null); setImagePreview(null); };
 
   const handleEdit = (lot) => {
     setForm({
@@ -44,6 +48,16 @@ export default function ParkingLotListPage() {
     });
     setEditing(lot.id);
     setShowForm(true);
+    setImageFile(null);
+    setImagePreview(lot.url_image ? `${API_BASE_URL}${lot.url_image}` : null);
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -56,8 +70,8 @@ export default function ParkingLotListPage() {
       numberOfPlaceAvailable: form.numberOfPlaceAvailable ? Number(form.numberOfPlaceAvailable) : 0,
     };
     try {
-      if (editing) { await parkingLotAPI.update(editing, payload); }
-      else { await parkingLotAPI.create(payload); }
+      if (editing) { await parkingLotAPI.update(editing, payload, imageFile); }
+      else { await parkingLotAPI.create(payload, imageFile); }
       resetForm();
       fetchData();
     } catch (err) { setError(err.response?.data?.message || 'Operation failed'); }
@@ -158,6 +172,24 @@ export default function ParkingLotListPage() {
                 <span className="text-sm text-dark-700">Subscriptions</span>
               </label>
             </div>
+            {/* Image upload */}
+            <div>
+              <label className="block text-sm font-medium text-dark-700 mb-1.5">Parking Image</label>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-dark-300 hover:border-primary-400 bg-dark-50 cursor-pointer transition-colors">
+                  <svg className="w-5 h-5 text-dark-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                  <span className="text-sm text-dark-600">{imageFile ? imageFile.name : 'Choose image…'}</span>
+                  <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                </label>
+                {imagePreview && (
+                  <div className="relative">
+                    <img src={imagePreview} alt="Preview" className="w-16 h-16 rounded-xl object-cover border border-dark-200" />
+                    <button type="button" onClick={() => { setImageFile(null); setImagePreview(null); }}
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-danger-500 text-white text-xs flex items-center justify-center hover:bg-danger-600 cursor-pointer">×</button>
+                  </div>
+                )}
+              </div>
+            </div>
             <div className="flex gap-3">
               <button type="submit" className="px-6 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition-all cursor-pointer">{editing ? 'Update' : 'Create'}</button>
               <button type="button" onClick={resetForm} className="px-6 py-2.5 rounded-xl bg-dark-100 hover:bg-dark-200 text-dark-700 text-sm font-semibold transition-all cursor-pointer">Cancel</button>
@@ -170,7 +202,17 @@ export default function ParkingLotListPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {lots.map((lot) => (
           <div key={lot.id} className="bg-white rounded-2xl border border-dark-200 shadow-sm hover:shadow-md transition-all overflow-hidden">
-            <div className={`h-2 ${lot.statusParking === 'OPEN' ? 'bg-accent-500' : 'bg-warning-500'}`}></div>
+            {lot.url_image ? (
+              <div className="relative h-40 overflow-hidden">
+                <img src={`${API_BASE_URL}${lot.url_image}`} alt={lot.name}
+                  className="w-full h-full object-cover" />
+                <div className={`absolute top-3 left-3 text-xs px-2.5 py-1 rounded-full font-semibold text-white shadow-sm ${
+                  lot.statusParking === 'OPEN' ? 'bg-accent-500' : 'bg-warning-500'
+                }`}>{lot.statusParking}</div>
+              </div>
+            ) : (
+              <div className={`h-2 ${lot.statusParking === 'OPEN' ? 'bg-accent-500' : 'bg-warning-500'}`}></div>
+            )}
             <div className="p-6">
               <div className="flex items-start justify-between mb-3">
                 <div>
@@ -200,9 +242,11 @@ export default function ParkingLotListPage() {
                 </div>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
-                <span className={`text-xs px-2 py-1 rounded-full font-medium ${lot.statusParking === 'OPEN' ? 'bg-accent-500/10 text-accent-600' : 'bg-warning-500/10 text-warning-500'}`}>
-                  {lot.statusParking}
-                </span>
+                {!lot.url_image && (
+                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${lot.statusParking === 'OPEN' ? 'bg-accent-500/10 text-accent-600' : 'bg-warning-500/10 text-warning-500'}`}>
+                    {lot.statusParking}
+                  </span>
+                )}
                 {lot.covered && <span className="text-xs px-2 py-1 rounded-full bg-primary-100 text-primary-700 font-medium">Covered</span>}
                 {lot.tarifGrid && <span className="text-xs px-2 py-1 rounded-full bg-dark-100 text-dark-600 font-medium">{lot.tarifGrid.name}</span>}
               </div>

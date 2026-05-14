@@ -392,7 +392,7 @@ export default function ReclamationDetailsPage() {
               <h3 className="text-white font-semibold">AI Assistant</h3>
               <div className="ml-auto">
                 <SwitchLabels
-                  label="Generale response"
+                  label="Generale context"
                   checked={modeResponse === MODE_RESPONSE.GENERAL_RESPONSE}
                   onChange={handleSwitch}
                 />
