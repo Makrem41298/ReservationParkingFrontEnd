@@ -23,6 +23,7 @@ export default {
           900: '#312e81',
         },
         accent: {
+          100: '#d1fae5',
           400: '#34d399',
           500: '#10b981',
           600: '#059669',
@@ -35,6 +36,7 @@ export default {
           600: '#dc2626',
         },
         warning: {
+          100: '#fef3c7',
           400: '#fbbf24',
           500: '#f59e0b',
         },
@@ -52,6 +54,25 @@ export default {
           950: '#020617',
         },
       },
+      keyframes: {
+        'fade-in-up': {
+          '0%': { opacity: '0', transform: 'translateY(20px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'fade-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        'float': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        }
+      },
+      animation: {
+        'fade-in-up': 'fade-in-up 0.8s ease-out forwards',
+        'fade-in': 'fade-in 1s ease-out forwards',
+        'float': 'float 3s ease-in-out infinite',
+      }
     },
   },
   plugins: [],
