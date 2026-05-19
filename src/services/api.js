@@ -72,7 +72,13 @@ api.interceptors.response.use(
         processQueue(refreshError, null);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = '/login';
+        // Only redirect to login if NOT on a public page
+        const publicPaths = ['/', '/parkings', '/login', '/register'];
+        const currentPath = window.location.pathname;
+        const isPublicPage = publicPaths.includes(currentPath) || currentPath.startsWith('/parking/');
+        if (!isPublicPage) {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

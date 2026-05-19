@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { subscriptionAPI } from '../subscriptionAPI';
 import { planParkingLotAPI } from '../../planParkingLot/planParkingLotAPI';
+import { parkingLotAPI } from '../../parkingLot/parkingLotAPI';
 import { useAuth } from '../../../context/AuthContext';
 import { formatDate, formatCurrency } from '../../../utils/formatDate';
 
 export default function SubscriptionsListPage() {
   const [subscriptions, setSubscriptions] = useState([]);
   const [planParkingLots, setPlanParkingLots] = useState([]);
+  const [parkingLots, setParkingLots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -18,12 +21,14 @@ export default function SubscriptionsListPage() {
 
   const fetchData = async () => {
     try {
-      const [subRes, pplRes] = await Promise.all([
+      const [subRes, pplRes, parkRes] = await Promise.all([
         subscriptionAPI.getAll(),
         planParkingLotAPI.getAll(),
+        parkingLotAPI.getAll(),
       ]);
       setSubscriptions(subRes.data);
       setPlanParkingLots(pplRes.data);
+      setParkingLots(parkRes.data);
     } catch { setError('Failed to load data'); }
     finally { setLoading(false); }
   };
@@ -39,10 +44,21 @@ export default function SubscriptionsListPage() {
     } catch (err) { setError(err.response?.data?.message || 'Failed to create subscription'); }
   };
 
+  const handleUpdateStatus = async (id, newStatus) => {
+    try {
+      await subscriptionAPI.updateStatus(id, newStatus);
+      fetchData();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update status');
+    }
+  };
+
   const statusStyles = {
     ACTIVE: 'bg-accent-500/10 text-accent-600',
     EXPIRED: 'bg-dark-100 text-dark-500',
     CANCELLED: 'bg-danger-500/10 text-danger-500',
+    CANCELED: 'bg-danger-500/10 text-danger-500',
+    SUSPENDED: 'bg-warning-500/10 text-warning-600',
   };
 
   if (loading) return <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div></div>;
@@ -55,9 +71,9 @@ export default function SubscriptionsListPage() {
           <p className="text-dark-500 mt-1">{subscriptions.length} subscriptions</p>
         </div>
         {isClient && (
-          <button onClick={() => setShowForm(!showForm)} className="px-4 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition-all shadow-lg shadow-primary-600/30 cursor-pointer">
+          <Link to="/parkings" className="px-4 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition-all shadow-lg shadow-primary-600/30 cursor-pointer flex items-center justify-center text-center">
             + Subscribe
-          </button>
+          </Link>
         )}
       </div>
 
@@ -98,21 +114,69 @@ export default function SubscriptionsListPage() {
                 <th className="text-left px-6 py-3 text-xs font-semibold text-dark-500 uppercase tracking-wider">Start</th>
                 <th className="text-left px-6 py-3 text-xs font-semibold text-dark-500 uppercase tracking-wider">End</th>
                 <th className="text-left px-6 py-3 text-xs font-semibold text-dark-500 uppercase tracking-wider">Status</th>
+                <th className="text-right px-6 py-3 text-xs font-semibold text-dark-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-dark-100">
-              {subscriptions.map((sub) => (
-                <tr key={sub.id} className="hover:bg-dark-50/50 transition-colors">
+              {subscriptions.map((sub) => {
+                const ppl = planParkingLots.find(p => p.id === sub.planParkingLotId) || sub.planParkingLot;
+                const parking = parkingLots.find(p => p.id === ppl?.parkingLotId) || ppl?.parkingLot;
+                const planName = ppl?.plan?.name || `#${sub.planParkingLotId}`;
+                const parkingName = parking?.name || '—';
+
+                return (
+                <tr key={sub.id} className={`transition-colors ${sub.status === 'CANCELED' || sub.status === 'CANCELLED' ? 'bg-dark-100 opacity-40 grayscale' : 'hover:bg-dark-50/50'}`}>
                   <td className="px-6 py-4 text-sm text-dark-600">#{sub.id}</td>
-                  <td className="px-6 py-4 text-sm font-medium text-dark-800">{sub.planParkingLot?.plan?.name || `#${sub.planParkingLotId}`}</td>
-                  <td className="px-6 py-4 text-sm text-dark-600">{sub.planParkingLot?.parkingLot?.name || '—'}</td>
+                  <td className="px-6 py-4 text-sm font-medium text-dark-800">{planName}</td>
+                  <td className="px-6 py-4 text-sm text-dark-600">{parkingName}</td>
                   <td className="px-6 py-4 text-sm text-dark-600">{formatDate(sub.startDate)}</td>
                   <td className="px-6 py-4 text-sm text-dark-600">{formatDate(sub.endDate)}</td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${statusStyles[sub.status] || 'bg-dark-100 text-dark-600'}`}>{sub.status}</span>
                   </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center justify-end gap-2">
+                      {(() => {
+                        const isCanceled = sub.status === 'CANCELED' || sub.status === 'CANCELLED';
+                        const isExpired = new Date(sub.endDate) < new Date();
+                        const isDisabled = isCanceled || isExpired;
+
+                        return (
+                          <>
+                            {(sub.status !== 'SUSPENDED' || isDisabled) && (
+                              <button 
+                                onClick={() => !isDisabled && handleUpdateStatus(sub.id, 'SUSPENDED')} 
+                                disabled={isDisabled}
+                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isDisabled ? 'bg-dark-200/50 text-dark-400 cursor-not-allowed' : 'bg-warning-500 hover:bg-warning-600 text-white shadow-sm cursor-pointer'}`}>
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                Suspend
+                              </button>
+                            )}
+                            {(sub.status === 'SUSPENDED' || isDisabled) && (
+                              <button 
+                                onClick={() => !isDisabled && handleUpdateStatus(sub.id, 'ACTIVE')} 
+                                disabled={isDisabled}
+                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isDisabled ? 'bg-dark-200/50 text-dark-400 cursor-not-allowed' : 'bg-accent-500 hover:bg-accent-600 text-white shadow-sm cursor-pointer'}`}>
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                Activate
+                              </button>
+                            )}
+                            {!isDisabled && (
+                              <button 
+                                onClick={() => handleUpdateStatus(sub.id, 'CANCELED')} 
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-danger-500 hover:bg-danger-600 text-white shadow-sm cursor-pointer">
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                Cancel
+                              </button>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

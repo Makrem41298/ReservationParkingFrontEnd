@@ -4,14 +4,16 @@ import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../features/auth/authAPI';
 import { ROLES } from '../constants/roles';
 
-const adminLinks = [
-  { to: '/dashboard', label: 'Dashboard', icon: HomeIcon },
-  { to: '/users', label: 'Users', icon: UsersIcon },
+const adminParkingLotLinks = [
   { to: '/parking-lots', label: 'Parking Lots', icon: ParkingIcon },
   { to: '/tarif-grids', label: 'Tariff Grids', icon: GridIcon },
-  { to: '/reservations', label: 'Reservations', icon: CalendarIcon },
   { to: '/plans', label: 'Plans', icon: ClipboardIcon },
   { to: '/plan-parking-lots', label: 'Plan-Parking', icon: LinkIcon },
+];
+
+const adminUsersLinks = [
+  { to: '/users', label: 'Users', icon: UsersIcon },
+  { to: '/reservations', label: 'Reservations', icon: CalendarIcon },
   { to: '/subscriptions', label: 'Subscriptions', icon: CreditCardIcon },
   { to: '/reclamations', label: 'Reclamations', icon: ChatBubbleIcon },
 ];
@@ -22,7 +24,6 @@ const superAdminLinks = [
 
 const clientLinks = [
   { to: '/dashboard', label: 'Dashboard', icon: HomeIcon },
-  { to: '/parking-lots', label: 'Parking Lots', icon: ParkingIcon },
   { to: '/reservations', label: 'My Reservations', icon: CalendarIcon },
   { to: '/subscriptions', label: 'My Subscriptions', icon: CreditCardIcon },
   { to: '/reclamations', label: 'Support & Issues', icon: ChatBubbleIcon },
@@ -33,7 +34,23 @@ export default function MainLayout() {
   const { user, logout: authLogout, isAdmin, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
 
-  const links = isAdmin ? adminLinks : clientLinks;
+  const NavItem = ({ to, label, icon: Icon }) => (
+    <NavLink
+      to={to}
+      end={to === '/dashboard'}
+      onClick={() => setSidebarOpen(false)}
+      className={({ isActive }) =>
+        `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+          isActive
+            ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/30'
+            : 'text-dark-300 hover:text-white hover:bg-dark-800'
+        }`
+      }
+    >
+      <Icon className="w-5 h-5 shrink-0" />
+      {label}
+    </NavLink>
+  );
 
   const handleLogout = async () => {
     try {
@@ -77,24 +94,29 @@ export default function MainLayout() {
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {links.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              end={link.to === '/dashboard'}
-              onClick={() => setSidebarOpen(false)}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  isActive
-                    ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/30'
-                    : 'text-dark-300 hover:text-white hover:bg-dark-800'
-                }`
-              }
-            >
-              <link.icon className="w-5 h-5 shrink-0" />
-              {link.label}
-            </NavLink>
-          ))}
+          {isAdmin ? (
+            <>
+              <NavItem to="/dashboard" label="Dashboard" icon={HomeIcon} />
+              
+              <div className="pt-4 pb-2 px-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-dark-500">Manager PARKING LOT</p>
+              </div>
+              {adminParkingLotLinks.map((link) => (
+                <NavItem key={link.to} {...link} />
+              ))}
+
+              <div className="pt-4 pb-2 px-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-dark-500">Manager Users</p>
+              </div>
+              {adminUsersLinks.map((link) => (
+                <NavItem key={link.to} {...link} />
+              ))}
+            </>
+          ) : (
+            clientLinks.map((link) => (
+              <NavItem key={link.to} {...link} />
+            ))
+          )}
 
           {/* Super Admin section */}
           {isSuperAdmin && (
@@ -103,21 +125,7 @@ export default function MainLayout() {
                 <p className="text-[10px] font-bold uppercase tracking-widest text-dark-500">Super Admin</p>
               </div>
               {superAdminLinks.map((link) => (
-                <NavLink
-                  key={link.to}
-                  to={link.to}
-                  onClick={() => setSidebarOpen(false)}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                      isActive
-                        ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/30'
-                        : 'text-dark-300 hover:text-white hover:bg-dark-800'
-                    }`
-                  }
-                >
-                  <link.icon className="w-5 h-5 shrink-0" />
-                  {link.label}
-                </NavLink>
+                <NavItem key={link.to} {...link} />
               ))}
             </>
           )}

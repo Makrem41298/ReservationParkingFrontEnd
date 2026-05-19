@@ -58,12 +58,20 @@ export default function LandingPage() {
               <a href="#features" className="text-sm font-medium text-dark-600 hover:text-primary-600 transition-colors">Features</a>
             </div>
             <div className="flex items-center gap-4">
-              <Link to="/login" className="text-sm font-semibold text-dark-600 hover:text-primary-600 transition-colors">
-                Sign in
-              </Link>
-              <Link to="/register" className="px-5 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition-all shadow-lg shadow-primary-600/30 hover:shadow-primary-600/40 hover:-translate-y-0.5">
-                Get Started
-              </Link>
+              {localStorage.getItem('token') ? (
+                <Link to="/dashboard" className="px-5 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition-all shadow-lg shadow-primary-600/30 hover:shadow-primary-600/40 hover:-translate-y-0.5">
+                  Dashboard
+                </Link>
+              ) : (
+                <>
+                  <Link to="/login" className="text-sm font-semibold text-dark-600 hover:text-primary-600 transition-colors">
+                    Sign in
+                  </Link>
+                  <Link to="/register" className="px-5 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition-all shadow-lg shadow-primary-600/30 hover:shadow-primary-600/40 hover:-translate-y-0.5">
+                    Get Started
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -89,7 +97,7 @@ export default function LandingPage() {
             Discover real-time parking availability, manage your reservations securely, and subscribe to premium plans tailored to your needs.
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4 animate-fade-in-up animation-delay-300">
-            <Link to="/register" className="w-full sm:w-auto px-8 py-4 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-lg font-semibold transition-all shadow-xl shadow-primary-600/30 hover:shadow-primary-600/40 hover:-translate-y-1">
+            <Link to="/parkings" className="w-full sm:w-auto px-8 py-4 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-lg font-semibold transition-all shadow-xl shadow-primary-600/30 hover:shadow-primary-600/40 hover:-translate-y-1">
               Start Booking Now
             </Link>
             <a href="#parkings" className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white hover:bg-dark-50 text-dark-800 border border-dark-200 text-lg font-semibold transition-all hover:border-dark-300">
@@ -132,7 +140,7 @@ export default function LandingPage() {
               <p className="text-lg text-dark-500 max-w-2xl">Find the perfect spot across our network of secure, modern parking facilities.</p>
             </div>
             {parkings.length > 0 && (
-              <Link to="/register" className="inline-flex items-center gap-2 text-primary-600 font-semibold hover:text-primary-700 transition-colors">
+              <Link to="/parkings" className="inline-flex items-center gap-2 text-primary-600 font-semibold hover:text-primary-700 transition-colors">
                 View All Details
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
               </Link>
@@ -146,7 +154,7 @@ export default function LandingPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {parkings.slice(0, 6).map((lot) => (
-                <div key={lot.id} className="group bg-white rounded-3xl border border-dark-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+                <Link to={`/parking/${lot.id}`} key={lot.id} className="group bg-white rounded-3xl border border-dark-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden block">
                   {lot.url_image ? (
                     <div className="relative h-48 overflow-hidden bg-dark-100">
                       <img 
@@ -206,11 +214,11 @@ export default function LandingPage() {
                       {lot.subscriptionAvailability && <span className="text-xs px-2.5 py-1 rounded-md bg-accent-50 text-accent-700 border border-accent-100 font-medium">Subscriptions</span>}
                     </div>
 
-                    <Link to="/register" className="block w-full py-3 text-center rounded-xl bg-dark-50 hover:bg-dark-100 text-dark-800 font-semibold transition-colors border border-dark-200">
-                      Book a Spot
-                    </Link>
+                    <span className="block w-full py-3 text-center rounded-xl bg-dark-50 group-hover:bg-primary-600 group-hover:text-white text-dark-800 font-semibold transition-colors border border-dark-200 group-hover:border-primary-600">
+                      View Details →
+                    </span>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}
@@ -267,7 +275,7 @@ export default function LandingPage() {
                     )}
                   </div>
 
-                  <Link to="/register" className="w-full py-3.5 px-4 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-center font-bold transition-all shadow-lg shadow-primary-600/30 hover:shadow-primary-600/40">
+                  <Link to="/parkings" className="w-full py-3.5 px-4 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-center font-bold transition-all shadow-lg shadow-primary-600/30 hover:shadow-primary-600/40">
                     View Pricing
                   </Link>
                 </div>

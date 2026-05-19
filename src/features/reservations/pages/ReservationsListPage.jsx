@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { reservationAPI } from '../reservationAPI';
 import { parkingLotAPI } from '../../parkingLot/parkingLotAPI';
 import { useAuth } from '../../../context/AuthContext';
@@ -81,9 +82,9 @@ export default function ReservationsListPage() {
           <p className="text-dark-500 mt-1">{reservations.length} reservations</p>
         </div>
         {isClient && (
-          <button onClick={() => { resetForm(); setShowForm(true); }} className="px-4 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition-all shadow-lg shadow-primary-600/30 cursor-pointer">
+          <Link to="/parkings" className="px-4 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition-all shadow-lg shadow-primary-600/30 cursor-pointer text-center flex items-center justify-center">
             + New Reservation
-          </button>
+          </Link>
         )}
       </div>
 

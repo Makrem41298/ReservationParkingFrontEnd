@@ -19,6 +19,8 @@ import ProfilePage from './features/auth/pages/ProfilePage';
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
 import LandingPage from './pages/LandingPage';
+import ParkingDetailPage from './pages/ParkingDetailPage';
+import AllParkingsPage from './pages/AllParkingsPage';
 
 // Feature pages
 import UsersListPage from './features/users/pages/UsersListPage';
@@ -45,6 +47,8 @@ function App() {
 
           {/* Public Landing Page */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/parking/:id" element={<ParkingDetailPage />} />
+          <Route path="/parkings" element={<AllParkingsPage />} />
 
           {/* Protected routes */}
           <Route

@@ -4,4 +4,5 @@ export const subscriptionAPI = {
   create: (data) => api.post('/subscriptions', data),
   getAll: () => api.get('/subscriptions'),
   getById: (id) => api.get(`/subscriptions/${id}`),
+  updateStatus: (id, status) => api.put(`/subscriptions/${id}`, { status }),
 };
