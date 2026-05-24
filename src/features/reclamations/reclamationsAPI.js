@@ -19,4 +19,7 @@ export const reclamationsAPI = {
 
 
   sendMessageAgent: (data) => api.post(`/agent`, data),
+  sendMessageClientAgent: (data) => api.post(`/agent-client`, data),
+  sendMessageAnonymousAgent: (data) => api.post(`/agent-anonymous`, data),
+
 };

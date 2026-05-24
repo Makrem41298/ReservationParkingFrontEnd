@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ROLES } from './constants/roles';
+import GlobalChatbot from './components/GlobalChatbot';
 
 // Layouts
 import AuthLayout from './layouts/AuthLayout';
@@ -98,6 +99,9 @@ function App() {
           {/* 404 */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+
+        {/* Global AI Chatbot — visible on all pages except for admin/super admin */}
+        <GlobalChatbot />
       </AuthProvider>
     </BrowserRouter>
   );

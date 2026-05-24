@@ -29,6 +29,7 @@ export default function ReclamationDetailsPage() {
   // Chat State
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
+  const [chatTyping, setChatTyping] = useState(false);
   const chatEndRef = useRef(null);
   const [modeResponse, setModeResponse] = useState(MODE_RESPONSE.GENERAL_RESPONSE);
 
@@ -158,21 +159,16 @@ export default function ReclamationDetailsPage() {
     const newChat = [...chatMessages, { sender: 'HumanMessage', message: chatInput }];
     setChatMessages(newChat);
     setChatInput('');
+    setChatTyping(true);
 
-    console.log(chatMessages);
-    console.log(reclamation);
+    try {
+      const response = await reclamationsAPI.sendMessageAgent({
+        question: chatInput,
+        reclamationId: reclamation.id,
+        modeResponse: modeResponse,
+      });
 
-    // Simulate Agent response
-    const response = await reclamationsAPI.sendMessageAgent({
-      question: chatInput,
-      reclamationId: reclamation.id,
-      modeResponse: modeResponse
-
-
-    });
-
-    const answer = response.data.answer;
-    setTimeout(() => {
+      const answer = response.data.answer;
       setChatMessages(prev => [
         ...prev,
         {
@@ -180,7 +176,15 @@ export default function ReclamationDetailsPage() {
           message: answer,
         }
       ]);
-    }, 1000);
+    } catch (err) {
+      console.error('Agent chat error:', err);
+      setChatMessages(prev => [
+        ...prev,
+        { sender: "IAMessage", message: "❌ Sorry, something went wrong. Please try again." }
+      ]);
+    } finally {
+      setChatTyping(false);
+    }
   };
 
   const copyToReply = (text) => {
@@ -455,6 +459,18 @@ export default function ReclamationDetailsPage() {
                 )}
               </div>
             ))}
+
+            {/* Typing indicator — three bouncing dots */}
+            {chatTyping && (
+              <div className="flex items-start">
+                <div className="bg-dark-800 border border-dark-700 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1.5">
+                  <span className="w-2 h-2 bg-dark-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                  <span className="w-2 h-2 bg-dark-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                  <span className="w-2 h-2 bg-dark-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                </div>
+              </div>
+            )}
+
             <div ref={chatEndRef} />
           </div>
 

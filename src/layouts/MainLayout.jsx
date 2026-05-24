@@ -31,7 +31,7 @@ const clientLinks = [
 
 export default function MainLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, logout: authLogout, isAdmin, isSuperAdmin } = useAuth();
+  const { user, logout: authLogout, isAdmin, isSuperAdmin, isClient } = useAuth();
   const navigate = useNavigate();
 
   const NavItem = ({ to, label, icon: Icon }) => (
