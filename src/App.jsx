@@ -22,6 +22,8 @@ import NotFound from './pages/NotFound';
 import LandingPage from './pages/LandingPage';
 import ParkingDetailPage from './pages/ParkingDetailPage';
 import AllParkingsPage from './pages/AllParkingsPage';
+import PaymentSuccessPage from './pages/PaymentSuccessPage';
+import PaymentCancelPage from './pages/PaymentCancelPage';
 
 // Feature pages
 import UsersListPage from './features/users/pages/UsersListPage';
@@ -50,6 +52,8 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/parking/:id" element={<ParkingDetailPage />} />
           <Route path="/parkings" element={<AllParkingsPage />} />
+          <Route path="/payment-success" element={<PaymentSuccessPage />} />
+          <Route path="/payment-cancel" element={<PaymentCancelPage />} />
 
           {/* Protected routes */}
           <Route

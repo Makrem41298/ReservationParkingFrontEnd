@@ -5,4 +5,6 @@ export const reservationAPI = {
   getAll: () => api.get('/reservations'),
   getById: (id) => api.get(`/reservations/${id}`),
   update: (id, data) => api.put(`/reservations/${id}`, data),
+  createCheckoutSession: (reservationId, amount) =>
+    api.post('/create-checkout-session', { reservationId, amount }),
 };

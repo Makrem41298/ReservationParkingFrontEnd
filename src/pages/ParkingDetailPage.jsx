@@ -63,13 +63,31 @@ export default function ParkingDetailPage() {
     }
     setError(''); setSuccess(''); setSubmitting(true);
     try {
-      await reservationAPI.create({
+      // 1. Create the reservation
+      const resResponse = await reservationAPI.create({
         parkingLotId: Number(id),
         startTimeDate: resForm.startTimeDate,
         endTimeDate: resForm.endTimeDate,
       });
-      setSuccess('Reservation created successfully!');
-      setResForm({ startTimeDate: '', endTimeDate: '' });
+
+      const reservation = resResponse.data.reservation;
+      const amount = reservation.totalPrice || estimate?.price || 0;
+
+
+
+      // 2. Create Stripe checkout session & redirect to payment
+      const checkoutResponse = await reservationAPI.createCheckoutSession(
+        reservation.id,
+        amount
+      );
+
+      // 3. Redirect to Stripe hosted checkout
+      if (checkoutResponse.data?.url) {
+        window.location.href = checkoutResponse.data.url;
+      } else {
+        setSuccess('Reservation created! Payment link unavailable.');
+        setResForm({ startTimeDate: '', endTimeDate: '' });
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create reservation');
     } finally { setSubmitting(false); }
@@ -360,7 +378,7 @@ export default function ParkingDetailPage() {
                           )}
                           <button type="submit" disabled={submitting}
                             className="w-full py-3 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-bold text-sm transition-all shadow-lg shadow-primary-600/30 disabled:opacity-50 cursor-pointer">
-                            {submitting ? 'Reserving...' : 'Reserve Now'}
+                            {submitting ? 'Processing...' : 'Reserve & Pay Now'}
                           </button>
                         </form>
                       ) : (

@@ -73,7 +73,7 @@ api.interceptors.response.use(
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         // Only redirect to login if NOT on a public page
-        const publicPaths = ['/', '/parkings', '/login', '/register'];
+        const publicPaths = ['/', '/parkings', '/login', '/register', '/payment-success', '/payment-cancel'];
         const currentPath = window.location.pathname;
         const isPublicPage = publicPaths.includes(currentPath) || currentPath.startsWith('/parking/');
         if (!isPublicPage) {
