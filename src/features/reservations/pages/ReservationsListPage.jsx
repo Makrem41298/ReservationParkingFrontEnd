@@ -14,7 +14,7 @@ export default function ReservationsListPage() {
   const [editing, setEditing] = useState(null);
   const { isAdmin, isClient } = useAuth();
 
-  const emptyForm = { parkingLotId: '', startTimeDate: '', endTimeDate: '', status: 'REQUESTED' };
+  const emptyForm = { parkingLotId: '', startTimeDate: '', endTimeDate: '', status: 'PENDING' };
   const [form, setForm] = useState(emptyForm);
 
   useEffect(() => { fetchData(); }, []);
@@ -65,11 +65,28 @@ export default function ReservationsListPage() {
     } catch (err) { setError(err.response?.data?.message || 'Operation failed'); }
   };
 
+  const handlePay = async (reservationId, amount) => {
+    setError('');
+    try {
+      const response = await reservationAPI.createCheckoutSession(reservationId, Number(amount));
+      if (response.data?.url) {
+        window.location.href = response.data.url;
+      } else {
+        setError('Stripe checkout session URL was not returned by the backend.');
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to initialize Stripe checkout session.');
+    }
+  };
+
   const statusStyles = {
-    REQUESTED: 'bg-warning-500/10 text-warning-500',
+    PENDING: 'bg-warning-500/10 text-warning-500',
     CONFIRMED: 'bg-accent-500/10 text-accent-600',
-    CANCELLED: 'bg-danger-500/10 text-danger-500',
+    CHECKED_IN: 'bg-info-500/10 text-info-600',
     COMPLETED: 'bg-primary-500/10 text-primary-600',
+    CANCELED: 'bg-danger-500/10 text-danger-500',
+    EXPIRED: 'bg-dark-500/10 text-dark-500',
+    NO_SHOW: 'bg-neutral-500/10 text-neutral-500',
   };
 
   if (loading) return <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div></div>;
@@ -108,11 +125,13 @@ export default function ReservationsListPage() {
                   <label className="block text-sm font-medium text-dark-700 mb-1.5">Status</label>
                   <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}
                     className="w-full px-4 py-2.5 rounded-xl border border-dark-200 bg-dark-50 text-dark-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-                    <option value="REQUESTED">REQUESTED</option>
+                    <option value="PENDING">PENDING</option>
                     <option value="CONFIRMED">CONFIRMED</option>
+                    <option value="CHECKED_IN">CHECKED_IN</option>
+                    <option value="COMPLETED">COMPLETED</option>
                     <option value="CANCELED">CANCELED</option>
                     <option value="EXPIRED">EXPIRED</option>
-                    <option value="USED">USED</option>
+                    <option value="NO_SHOW">NO_SHOW</option>
                   </select>
                 </div>
               )}
@@ -171,7 +190,15 @@ export default function ReservationsListPage() {
                   <td className="px-6 py-4">
                     <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${statusStyles[r.status] || 'bg-dark-100 text-dark-600'}`}>{r.status}</span>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 flex items-center gap-2">
+                    {isClient && r.status === 'PENDING' && (
+                      <button
+                        onClick={() => handlePay(r.id, r.totalPrice)}
+                        className="text-xs font-bold px-3 py-1.5 rounded-lg bg-accent-500 hover:bg-accent-600 text-white transition-colors cursor-pointer shadow-sm shadow-accent-500/20"
+                      >
+                        Pay Now
+                      </button>
+                    )}
                     <button onClick={() => handleEdit(r)} className="text-xs font-medium px-3 py-1.5 rounded-lg bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors cursor-pointer">Edit</button>
                   </td>
                 </tr>

@@ -46,6 +46,13 @@ export default function UsersListPage() {
     }
   };
 
+  const statusStyles = {
+    ACTIVE: 'bg-accent-500/10 text-accent-600',
+    PENDING: 'bg-warning-500/10 text-warning-500',
+    SUSPENDED: 'bg-danger-500/10 text-danger-500',
+    BLOCKED: 'bg-danger-500/10 text-danger-500',
+  };
+
   const handleOpenModal = (user = null) => {
     setSelectedUser(user);
     setIsModalOpen(true);
@@ -163,9 +170,7 @@ export default function UsersListPage() {
                   </td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${
-                      u.accountStatus === 'ACTIVE'
-                        ? 'bg-accent-500/10 text-accent-600'
-                        : 'bg-danger-500/10 text-danger-500'
+                      statusStyles[u.accountStatus] || 'bg-dark-100 text-dark-600'
                     }`}>
                       {u.accountStatus}
                     </span>

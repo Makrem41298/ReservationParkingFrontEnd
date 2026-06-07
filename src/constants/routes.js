@@ -11,4 +11,5 @@ export const ROUTES = {
   PLANS: '/plans',
   PLAN_PARKING_LOTS: '/plan-parking-lots',
   SUBSCRIPTIONS: '/subscriptions',
+  TRANSACTIONS: '/transactions',
 };

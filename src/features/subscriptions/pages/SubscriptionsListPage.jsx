@@ -54,6 +54,7 @@ export default function SubscriptionsListPage() {
   };
 
   const statusStyles = {
+    PENDING: 'bg-warning-500/10 text-warning-500',
     ACTIVE: 'bg-accent-500/10 text-accent-600',
     EXPIRED: 'bg-dark-100 text-dark-500',
     CANCELLED: 'bg-danger-500/10 text-danger-500',

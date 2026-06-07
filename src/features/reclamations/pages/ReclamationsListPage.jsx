@@ -45,6 +45,22 @@ export default function ReclamationsListPage() {
     }
   };
 
+  const statusStyles = {
+    OPEN: 'bg-slate-50 text-slate-700 border-slate-200',
+    IN_PROGRESS: 'bg-amber-50 text-amber-700 border-amber-200',
+    RESOLVED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    REJECTED: 'bg-red-50 text-red-700 border-red-200',
+    CLOSED: 'bg-dark-50 text-dark-700 border-dark-200',
+  };
+
+  const dotStyles = {
+    OPEN: 'bg-slate-500',
+    IN_PROGRESS: 'bg-amber-500 animate-pulse',
+    RESOLVED: 'bg-emerald-500',
+    REJECTED: 'bg-red-500',
+    CLOSED: 'bg-dark-500',
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -88,25 +104,17 @@ export default function ReclamationsListPage() {
                     </td>
                     <td className="p-4 text-sm font-medium text-dark-900">{rec.subject}</td>
                     <td className="p-4">
-                      <span
-                        className={`px-3 py-1 inline-flex items-center gap-1.5 text-xs font-semibold rounded-full border ${
-                          rec.status === 'RESOLVED'
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                            : rec.status === 'IN_PROGRESS'
-                            ? 'bg-amber-50 text-amber-700 border-amber-200'
-                            : rec.status === 'REJECTED'
-                            ? 'bg-red-50 text-red-700 border-red-200'
-                            : 'bg-slate-50 text-slate-700 border-slate-200'
-                        }`}
-                      >
+                      <span className={`px-3 py-1 inline-flex items-center gap-1.5 text-xs font-semibold rounded-full border ${
+                        statusStyles[rec.status] || 'bg-slate-50 text-slate-700 border-slate-200'
+                      }`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${
-                          rec.status === 'RESOLVED' ? 'bg-emerald-500' :
-                          rec.status === 'IN_PROGRESS' ? 'bg-amber-500 animate-pulse' :
-                          rec.status === 'REJECTED' ? 'bg-red-500' : 'bg-slate-500'
+                          dotStyles[rec.status] || 'bg-slate-500'
                         }`}></span>
                         {rec.status === 'IN_PROGRESS' ? 'In Progress' : 
                          rec.status === 'RESOLVED' ? 'Resolved' : 
-                         rec.status === 'REJECTED' ? 'Rejected' : rec.status}
+                         rec.status === 'REJECTED' ? 'Rejected' : 
+                         rec.status === 'OPEN' ? 'Open' : 
+                         rec.status === 'CLOSED' ? 'Closed' : rec.status}
                       </span>
                     </td>
                     <td className="p-4 text-sm">

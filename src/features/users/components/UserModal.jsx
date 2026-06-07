@@ -201,6 +201,7 @@ export default function UserModal({ isOpen, onClose, onSubmit, user, isSuperAdmi
                   <option value={ACCOUNT_STATUS.ACTIVE}>Active</option>
                   <option value={ACCOUNT_STATUS.BLOCKED}>Blocked</option>
                   <option value={ACCOUNT_STATUS.PENDING}>Pending</option>
+                  <option value={ACCOUNT_STATUS.SUSPENDED}>Suspended</option>
                 </select>
               </div>
             )}

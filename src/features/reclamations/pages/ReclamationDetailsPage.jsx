@@ -132,6 +132,34 @@ export default function ReclamationDetailsPage() {
     }
   };
 
+  const handleAcceptResolution = async () => {
+    try {
+      setEditLoading(true);
+      const res = await reclamationsAPI.update(id, { status: 'CLOSED' });
+      setReclamation(res.data);
+      alert('Reclamation closed and resolved successfully!');
+    } catch (err) {
+      console.error(err);
+      alert('Error closing reclamation');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleRefuseResolution = async () => {
+    try {
+      setEditLoading(true);
+      const res = await reclamationsAPI.update(id, { status: 'IN_PROGRESS' });
+      setReclamation(res.data);
+      alert('Resolution refused. The reclamation status has returned to In Progress.');
+    } catch (err) {
+      console.error(err);
+      alert('Error refusing resolution');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
   const [generateLoading, setGenerateLoading] = useState(false);
 
   const handleGenerateAIReply = async () => {
@@ -191,6 +219,22 @@ export default function ReclamationDetailsPage() {
     setReplyText(text);
   };
 
+  const statusStyles = {
+    OPEN: 'bg-slate-50 text-slate-700 border-slate-200',
+    IN_PROGRESS: 'bg-amber-50 text-amber-700 border-amber-200',
+    RESOLVED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    REJECTED: 'bg-red-50 text-red-700 border-red-200',
+    CLOSED: 'bg-dark-50 text-dark-700 border-dark-200',
+  };
+
+  const dotStyles = {
+    OPEN: 'bg-slate-500',
+    IN_PROGRESS: 'bg-amber-500 animate-pulse',
+    RESOLVED: 'bg-emerald-500',
+    REJECTED: 'bg-red-500',
+    CLOSED: 'bg-dark-500',
+  };
+
   if (loading) return <div className="p-8 text-center text-dark-500">Loading details...</div>;
   if (error) return <div className="p-8 text-center text-danger-500">{error}</div>;
   if (!reclamation) return <div className="p-8 text-center text-dark-500">Reclamation not found.</div>;
@@ -217,21 +261,17 @@ export default function ReclamationDetailsPage() {
               </p>
             </div>
           </div>
-          <span className={`px-3 py-1 inline-flex items-center gap-1.5 text-xs font-semibold rounded-full border ${reclamation.status === 'RESOLVED'
-              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-              : reclamation.status === 'IN_PROGRESS'
-                ? 'bg-amber-50 text-amber-700 border-amber-200'
-                : reclamation.status === 'REJECTED'
-                  ? 'bg-red-50 text-red-700 border-red-200'
-                  : 'bg-slate-50 text-slate-700 border-slate-200'
-            }`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${reclamation.status === 'RESOLVED' ? 'bg-emerald-500' :
-                reclamation.status === 'IN_PROGRESS' ? 'bg-amber-500 animate-pulse' :
-                  reclamation.status === 'REJECTED' ? 'bg-red-500' : 'bg-slate-500'
-              }`}></span>
+          <span className={`px-3 py-1 inline-flex items-center gap-1.5 text-xs font-semibold rounded-full border ${
+            statusStyles[reclamation.status] || 'bg-slate-50 text-slate-700 border-slate-200'
+          }`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${
+              dotStyles[reclamation.status] || 'bg-slate-500'
+            }`}></span>
             {reclamation.status === 'IN_PROGRESS' ? 'In Progress' :
               reclamation.status === 'RESOLVED' ? 'Resolved' :
-                reclamation.status === 'REJECTED' ? 'Rejected' : reclamation.status}
+                reclamation.status === 'REJECTED' ? 'Rejected' : 
+                  reclamation.status === 'OPEN' ? 'Open' : 
+                    reclamation.status === 'CLOSED' ? 'Closed' : reclamation.status}
           </span>
         </div>
 
@@ -354,7 +394,6 @@ export default function ReclamationDetailsPage() {
                       onChange={(e) => setStatus(e.target.value)}
                       className="px-4 py-2 bg-white border border-dark-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500"
                     >
-                      <option value="IN_PROGRESS">In Progress</option>
                       <option value="RESOLVED">Resolved</option>
                       <option value="REJECTED">Rejected</option>
                     </select>
@@ -370,10 +409,30 @@ export default function ReclamationDetailsPage() {
                 </div>
               </div>
             ) : (
-              <div className="bg-white p-5 rounded-xl border border-dark-200 shadow-sm">
-                <p className="text-dark-700 whitespace-pre-wrap">
-                  {reclamation.solution || <span className="italic text-dark-400">No solution provided yet...</span>}
-                </p>
+              <div className="space-y-4">
+                <div className="bg-white p-5 rounded-xl border border-dark-200 shadow-sm">
+                  <p className="text-dark-700 whitespace-pre-wrap">
+                    {reclamation.solution || <span className="italic text-dark-400">No solution provided yet...</span>}
+                  </p>
+                </div>
+                {reclamation.status === 'RESOLVED' && (
+                  <div className="flex justify-end gap-3">
+                    <button
+                      onClick={handleRefuseResolution}
+                      disabled={editLoading}
+                      className="px-5 py-2.5 rounded-xl bg-danger-500 hover:bg-danger-600 text-white font-semibold text-sm transition-all cursor-pointer shadow-md shadow-danger-500/20 disabled:opacity-50"
+                    >
+                      {editLoading ? 'Processing...' : 'Refuse Solution'}
+                    </button>
+                    <button
+                      onClick={handleAcceptResolution}
+                      disabled={editLoading}
+                      className="px-5 py-2.5 rounded-xl bg-accent-600 hover:bg-accent-700 text-white font-semibold text-sm transition-all cursor-pointer shadow-md shadow-accent-600/20 disabled:opacity-50"
+                    >
+                      {editLoading ? 'Processing...' : 'Accept Resolution'}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

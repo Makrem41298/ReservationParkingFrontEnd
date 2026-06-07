@@ -83,6 +83,20 @@ export default function ParkingLotListPage() {
     catch { setError('Failed to delete'); }
   };
 
+  const statusStyles = {
+    OPEN: 'bg-accent-500',
+    CLOSED: 'bg-danger-500',
+    MAINTENANCE: 'bg-warning-500',
+    FULL: 'bg-dark-500',
+  };
+
+  const pillStatusStyles = {
+    OPEN: 'bg-accent-500/10 text-accent-600',
+    CLOSED: 'bg-danger-500/10 text-danger-600',
+    MAINTENANCE: 'bg-warning-500/10 text-warning-500',
+    FULL: 'bg-dark-500/10 text-dark-500',
+  };
+
   if (loading) return <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div></div>;
 
   return (
@@ -145,7 +159,9 @@ export default function ParkingLotListPage() {
                   <select value={form.statusParking || 'OPEN'} onChange={(e) => setForm({ ...form, statusParking: e.target.value })}
                     className="w-full px-4 py-2.5 rounded-xl border border-dark-200 bg-dark-50 text-dark-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
                     <option value="OPEN">OPEN</option>
+                    <option value="CLOSED">CLOSED</option>
                     <option value="MAINTENANCE">MAINTENANCE</option>
+                    <option value="FULL">FULL</option>
                   </select>
                 </div>
               )}
@@ -207,7 +223,7 @@ export default function ParkingLotListPage() {
                 <img src={`${API_BASE_URL}${lot.url_image}`} alt={lot.name}
                   className="w-full h-full object-cover" />
                 <div className={`absolute top-3 left-3 text-xs px-2.5 py-1 rounded-full font-semibold text-white shadow-sm ${
-                  lot.statusParking === 'OPEN' ? 'bg-accent-500' : 'bg-warning-500'
+                  statusStyles[lot.statusParking] || 'bg-dark-500'
                 }`}>{lot.statusParking}</div>
               </div>
             ) : (
@@ -243,7 +259,9 @@ export default function ParkingLotListPage() {
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 {!lot.url_image && (
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${lot.statusParking === 'OPEN' ? 'bg-accent-500/10 text-accent-600' : 'bg-warning-500/10 text-warning-500'}`}>
+                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                    pillStatusStyles[lot.statusParking] || 'bg-dark-100 text-dark-600'
+                  }`}>
                     {lot.statusParking}
                   </span>
                 )}

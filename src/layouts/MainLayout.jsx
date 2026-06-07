@@ -15,6 +15,7 @@ const adminUsersLinks = [
   { to: '/users', label: 'Users', icon: UsersIcon },
   { to: '/reservations', label: 'Reservations', icon: CalendarIcon },
   { to: '/subscriptions', label: 'Subscriptions', icon: CreditCardIcon },
+  { to: '/transactions', label: 'Transactions', icon: CurrencyDollarIcon },
   { to: '/reclamations', label: 'Reclamations', icon: ChatBubbleIcon },
 ];
 
@@ -26,14 +27,16 @@ const clientLinks = [
   { to: '/dashboard', label: 'Dashboard', icon: HomeIcon },
   { to: '/reservations', label: 'My Reservations', icon: CalendarIcon },
   { to: '/subscriptions', label: 'My Subscriptions', icon: CreditCardIcon },
+  { to: '/transactions', label: 'My Payments', icon: CurrencyDollarIcon },
   { to: '/reclamations', label: 'Support & Issues', icon: ChatBubbleIcon },
 ];
 
 export default function MainLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, logout: authLogout, isAdmin, isSuperAdmin, isClient } = useAuth();
+  const { user, logout: authLogout, isAdmin, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
 
+  // eslint-disable-next-line no-unused-vars
   const NavItem = ({ to, label, icon: Icon }) => (
     <NavLink
       to={to}
@@ -277,6 +280,14 @@ function SettingsIcon({ className }) {
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.573-1.066z" />
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  );
+}
+
+function CurrencyDollarIcon({ className }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
   );
 }

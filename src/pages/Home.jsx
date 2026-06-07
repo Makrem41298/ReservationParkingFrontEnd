@@ -164,10 +164,13 @@ export default function Home() {
 
 function StatusBadge({ status }) {
   const styles = {
-    REQUESTED: 'bg-warning-500/10 text-warning-500',
+    PENDING: 'bg-warning-500/10 text-warning-500',
     CONFIRMED: 'bg-accent-500/10 text-accent-600',
-    CANCELLED: 'bg-danger-500/10 text-danger-500',
+    CHECKED_IN: 'bg-info-500/10 text-info-600',
     COMPLETED: 'bg-primary-500/10 text-primary-600',
+    CANCELED: 'bg-danger-500/10 text-danger-500',
+    EXPIRED: 'bg-dark-500/10 text-dark-500',
+    NO_SHOW: 'bg-neutral-500/10 text-neutral-500',
   };
   return (
     <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${styles[status] || 'bg-dark-100 text-dark-600'}`}>

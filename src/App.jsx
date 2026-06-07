@@ -36,6 +36,7 @@ import SubscriptionsListPage from './features/subscriptions/pages/SubscriptionsL
 import ReclamationsListPage from './features/reclamations/pages/ReclamationsListPage';
 import ReclamationDetailsPage from './features/reclamations/pages/ReclamationDetailsPage';
 import SettingsPage from './features/settings/pages/SettingsPage';
+import TransactionsPage from './features/payments/pages/TransactionsPage';
 
 function App() {
   return (
@@ -72,6 +73,7 @@ function App() {
             <Route path="/plan-parking-lots" element={<PlanParkingLotListPage />} />
             <Route path="/reclamations" element={<ReclamationsListPage />} />
             <Route path="/reclamations/:id" element={<ReclamationDetailsPage />} />
+            <Route path="/transactions" element={<TransactionsPage />} />
 
             {/* Admin-only */}
             <Route
