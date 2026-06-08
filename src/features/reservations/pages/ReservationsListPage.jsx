@@ -4,6 +4,7 @@ import { reservationAPI } from '../reservationAPI';
 import { parkingLotAPI } from '../../parkingLot/parkingLotAPI';
 import { useAuth } from '../../../context/AuthContext';
 import { formatDateTime, formatCurrency } from '../../../utils/formatDate';
+import ReservationDetailModal from '../components/ReservationDetailModal';
 
 export default function ReservationsListPage() {
   const [reservations, setReservations] = useState([]);
@@ -16,6 +17,7 @@ export default function ReservationsListPage() {
 
   const emptyForm = { parkingLotId: '', startTimeDate: '', endTimeDate: '', status: 'PENDING' };
   const [form, setForm] = useState(emptyForm);
+  const [selectedReservation, setSelectedReservation] = useState(null);
 
   useEffect(() => { fetchData(); }, []);
 
@@ -175,6 +177,7 @@ export default function ReservationsListPage() {
                 <th className="text-left px-6 py-3 text-xs font-semibold text-dark-500 uppercase tracking-wider">End</th>
                 <th className="text-left px-6 py-3 text-xs font-semibold text-dark-500 uppercase tracking-wider">Price</th>
                 <th className="text-left px-6 py-3 text-xs font-semibold text-dark-500 uppercase tracking-wider">Status</th>
+                <th className="text-left px-6 py-3 text-xs font-semibold text-dark-500 uppercase tracking-wider">Details</th>
                 <th className="text-left px-6 py-3 text-xs font-semibold text-dark-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
@@ -189,6 +192,28 @@ export default function ReservationsListPage() {
                   <td className="px-6 py-4 text-sm font-medium text-dark-800">{formatCurrency(r.totalPrice)}</td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${statusStyles[r.status] || 'bg-dark-100 text-dark-600'}`}>{r.status}</span>
+                  </td>
+                  {/* Detail / QR icon */}
+                  <td className="px-6 py-4">
+                    <button
+                      onClick={() => setSelectedReservation(r)}
+                      title="View details & QR code"
+                      className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-primary-50 text-dark-400 hover:text-primary-600 transition-colors cursor-pointer"
+                    >
+                      {r.qrCode ? (
+                        /* QR icon when QR is available */
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                            d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                        </svg>
+                      ) : (
+                        /* Eye icon when no QR yet */
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      )}
+                    </button>
                   </td>
                   <td className="px-6 py-4 flex items-center gap-2">
                     {isClient && r.status === 'PENDING' && (
@@ -208,6 +233,14 @@ export default function ReservationsListPage() {
         </div>
         {reservations.length === 0 && <div className="p-8 text-center text-dark-400">No reservations found</div>}
       </div>
+
+      {/* Detail Modal */}
+      {selectedReservation && (
+        <ReservationDetailModal
+          reservation={selectedReservation}
+          onClose={() => setSelectedReservation(null)}
+        />
+      )}
     </div>
   );
 }
