@@ -117,12 +117,12 @@ export default function PlanParkingLotListPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-dark-700 mb-1.5">Subscription Fee (TND)</label>
+                <label className="block text-sm font-medium text-dark-700 mb-1.5">Subscription Fee (€)</label>
                 <input type="number" step="0.01" required value={form.subscriptionFee} onChange={(e) => setForm({ ...form, subscriptionFee: e.target.value })}
                   className="w-full px-4 py-2.5 rounded-xl border border-dark-200 bg-dark-50 text-dark-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-dark-700 mb-1.5">Renew Fee (TND)</label>
+                <label className="block text-sm font-medium text-dark-700 mb-1.5">Renew Fee (€)</label>
                 <input type="number" step="0.01" required value={form.renewFee} onChange={(e) => setForm({ ...form, renewFee: e.target.value })}
                   className="w-full px-4 py-2.5 rounded-xl border border-dark-200 bg-dark-50 text-dark-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
               </div>

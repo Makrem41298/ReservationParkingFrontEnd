@@ -1,8 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authAPI } from '../authAPI';
+import { useAuth } from '../../../context/AuthContext';
 
 export default function RegisterPage() {
+  const { isAuthenticated, isClient } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(isClient ? '/profile' : '/dashboard');
+    }
+  }, [isAuthenticated, isClient, navigate]);
+
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -13,7 +23,6 @@ export default function RegisterPage() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });

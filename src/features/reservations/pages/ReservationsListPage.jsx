@@ -149,7 +149,7 @@ export default function ReservationsListPage() {
               </div>
               {editing && form.totalPrice != null && (
                 <div>
-                  <label className="block text-sm font-medium text-dark-700 mb-1.5">Price (TND)</label>
+                  <label className="block text-sm font-medium text-dark-700 mb-1.5">Price (€)</label>
                   <div className="w-full px-4 py-2.5 rounded-xl border border-dark-200 bg-dark-100 text-dark-600 cursor-not-allowed">
                     {formatCurrency(form.totalPrice)}
                   </div>

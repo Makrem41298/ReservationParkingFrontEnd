@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { parkingLotAPI } from '../features/parkingLot/parkingLotAPI';
+import { useAuth } from '../context/AuthContext';
 
 const API_BASE_URL = 'http://localhost:3000';
 
@@ -11,11 +12,7 @@ export default function AllParkingsPage() {
   const [filterCity, setFilterCity] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
 
-  const token = localStorage.getItem('token');
-  const storedUser = localStorage.getItem('user');
-  let user = null;
-  try { user = storedUser ? JSON.parse(storedUser) : null; } catch { user = null; }
-  const isLoggedIn = !!token && !!user;
+  const { isAuthenticated, isClient } = useAuth();
 
   useEffect(() => { fetchParkings(); }, []);
 
@@ -49,8 +46,10 @@ export default function AllParkingsPage() {
               <span className="text-lg font-bold tracking-tight text-dark-900">ParkEase</span>
             </Link>
             <div className="flex items-center gap-4">
-              {isLoggedIn ? (
-                <Link to="/dashboard" className="px-5 py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition-all shadow-lg shadow-primary-600/30">Dashboard</Link>
+              {isAuthenticated ? (
+                <Link to={isClient ? "/profile" : "/dashboard"} className="px-5 py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition-all shadow-lg shadow-primary-600/30">
+                  {isClient ? 'Profile' : 'Dashboard'}
+                </Link>
               ) : (
                 <>
                   <Link to="/login" className="text-sm font-semibold text-dark-600 hover:text-primary-600 transition-colors">Sign in</Link>

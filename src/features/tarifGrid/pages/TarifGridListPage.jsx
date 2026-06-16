@@ -150,7 +150,7 @@ export default function TarifGridListPage() {
                 {grid.grid.map((tier, i) => (
                   <tr key={i} className="border-t border-dark-100">
                     <td className="py-2 text-dark-600">{tier.minutes} min</td>
-                    <td className="py-2 text-right font-medium text-dark-800">{parseFloat(tier.price).toFixed(2)} TND</td>
+                    <td className="py-2 text-right font-medium text-dark-800">{parseFloat(tier.price).toFixed(2)} €</td>
                   </tr>
                 ))}
               </tbody>

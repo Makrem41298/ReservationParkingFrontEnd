@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { parkingLotAPI } from '../features/parkingLot/parkingLotAPI';
 import { planAPI } from '../features/plans/planAPI';
 import { formatCurrency } from '../utils/formatDate';
+import { useAuth } from '../context/AuthContext';
 
 const API_BASE_URL = 'http://localhost:3000';
 
@@ -10,6 +11,8 @@ export default function LandingPage() {
   const [parkings, setParkings] = useState([]);
   const [plans, setPlans] = useState([]);
   const [stats, setStats] = useState({ totalSpots: 0, cities: 0 });
+
+  const { isAuthenticated, isClient } = useAuth();
 
   useEffect(() => {
     fetchData();
@@ -58,9 +61,12 @@ export default function LandingPage() {
               <a href="#features" className="text-sm font-medium text-dark-600 hover:text-primary-600 transition-colors">Features</a>
             </div>
             <div className="flex items-center gap-4">
-              {localStorage.getItem('token') ? (
-                <Link to="/dashboard" className="px-5 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition-all shadow-lg shadow-primary-600/30 hover:shadow-primary-600/40 hover:-translate-y-0.5">
-                  Dashboard
+              {isAuthenticated ? (
+                <Link 
+                  to={isClient ? "/profile" : "/dashboard"} 
+                  className="px-5 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition-all shadow-lg shadow-primary-600/30 hover:shadow-primary-600/40 hover:-translate-y-0.5"
+                >
+                  {isClient ? "Profile" : "Dashboard"}
                 </Link>
               ) : (
                 <>

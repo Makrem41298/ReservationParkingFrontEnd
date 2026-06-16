@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { parkingLotAPI } from '../features/parkingLot/parkingLotAPI';
 import { planParkingLotAPI } from '../features/planParkingLot/planParkingLotAPI';
+import { useAuth } from '../context/AuthContext';
 import { reservationAPI } from '../features/reservations/reservationAPI';
 import { subscriptionAPI } from '../features/subscriptions/subscriptionAPI';
 import { formatCurrency } from '../utils/formatDate';
@@ -25,12 +26,8 @@ export default function ParkingDetailPage() {
   const [subForm, setSubForm] = useState({ planParkingLotId: '' });
 
   // Auth check
-  const token = localStorage.getItem('token');
-  const storedUser = localStorage.getItem('user');
-  let user = null;
-  try { user = storedUser ? JSON.parse(storedUser) : null; } catch { user = null; }
-  const isClient = user?.role === 'CLIENT';
-  const isLoggedIn = !!token && !!user;
+  const { isAuthenticated, isClient } = useAuth();
+  const isLoggedIn = isAuthenticated;
 
   useEffect(() => {
     fetchData();
@@ -129,27 +126,25 @@ export default function ParkingDetailPage() {
     const end = new Date(resForm.endTimeDate);
     if (end <= start) return null;
 
-    const diffMinutes = Math.ceil((end - start) / (1000 * 60));
+    const diffMinutes = Math.floor((end - start) / (1000 * 60));
     
     const sortedGrid = [...parking.tarifGrid.grid].sort((a, b) => a.minutes - b.minutes);
-    let remainingMinutes = diffMinutes;
-    let totalPrice = 0;
-    
     const maxTier = sortedGrid[sortedGrid.length - 1];
+    let totalPrice = 0;
+    const hourUnit = 60; // Use 60 minutes (1 hour) as the unit for recurring calculation
     
-    if (remainingMinutes > maxTier.minutes) {
-        const numMaxTiers = Math.floor(remainingMinutes / maxTier.minutes);
-        totalPrice += numMaxTiers * maxTier.price;
-        remainingMinutes = remainingMinutes % maxTier.minutes;
-    }
-    
-    if (remainingMinutes > 0) {
-        const fittingTier = sortedGrid.find(t => t.minutes >= remainingMinutes);
-        if (fittingTier) {
-            totalPrice += fittingTier.price;
-        } else {
-            totalPrice += maxTier.price;
-        }
+    if (diffMinutes < hourUnit) {
+      const fittingTier = sortedGrid.find(t => diffMinutes <= t.minutes);
+      totalPrice = fittingTier ? fittingTier.price : maxTier.price;
+    } else {
+      const hours = Math.floor(diffMinutes / hourUnit);
+      totalPrice = hours * maxTier.price;
+      const remainder = diffMinutes % hourUnit;
+      
+      if (remainder > 0) {
+        const fittingTier = sortedGrid.find(t => remainder <= t.minutes);
+        totalPrice += fittingTier ? fittingTier.price : maxTier.price;
+      }
     }
     
     return { price: totalPrice, minutes: diffMinutes };
@@ -175,7 +170,7 @@ export default function ParkingDetailPage() {
             </Link>
             <div className="flex items-center gap-4">
               {isLoggedIn ? (
-                <Link to="/dashboard" className="px-5 py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition-all shadow-lg shadow-primary-600/30">
+                <Link to={isClient ? "/profile" : "/dashboard"} className="px-5 py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition-all shadow-lg shadow-primary-600/30">
                   {isClient ? 'Profile' : 'Dashboard'}
                 </Link>
               ) : (

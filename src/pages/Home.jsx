@@ -150,7 +150,7 @@ export default function Home() {
                     <td className="px-6 py-4">
                       <StatusBadge status={r.status} />
                     </td>
-                    <td className="px-6 py-4 text-sm font-medium text-dark-800">{parseFloat(r.totalPrice).toFixed(2)} TND</td>
+                    <td className="px-6 py-4 text-sm font-medium text-dark-800">{parseFloat(r.totalPrice).toFixed(2)} €</td>
                   </tr>
                 ))}
               </tbody>

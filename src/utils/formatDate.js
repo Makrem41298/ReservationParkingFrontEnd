@@ -22,5 +22,5 @@ export function formatDateTime(dateString) {
 
 export function formatCurrency(amount) {
   if (amount == null) return '—';
-  return `${parseFloat(amount).toFixed(2)} TND`;
+  return `${parseFloat(amount).toFixed(2)} €`;
 }
