@@ -339,7 +339,7 @@ export default function ReclamationDetailsPage() {
                   <button
                     onClick={handleGenerateAIReply}
                     disabled={generateLoading}
-                    className="absolute bottom-3 right-3 flex items-center gap-1.5 px-3 py-1.5 bg-accent-50 text-accent-700 hover:bg-accent-100 border border-accent-100 rounded-lg text-xs font-bold transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="absolute bottom-3 right-3 flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-100 rounded-lg text-xs font-bold transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {generateLoading ? '⏳ Generating...' : '✨ Generate reply by agent'}
                   </button>
@@ -441,13 +441,26 @@ export default function ReclamationDetailsPage() {
 
       {/* RIGHT PANE: Agent Sidebar (Admins Only) */}
       {isAdmin && (
-        <div className="relative w-full flex flex-col bg-dark-900 rounded-2xl shadow-xl overflow-hidden border border-dark-800 shrink-0" style={{ width: chatWidth, minWidth: 300, maxWidth: 700 }}>
+        <div
+          className={`relative w-full flex flex-col rounded-2xl shadow-xl overflow-hidden border shrink-0 transition-all duration-500 ${
+            modeResponse === MODE_RESPONSE.GENERAL_RESPONSE
+              ? 'bg-dark-900 border-dark-800'
+              : 'bg-indigo-950 border-indigo-900'
+          }`}
+          style={{ width: chatWidth, minWidth: 300, maxWidth: 700 }}
+        >
           {/* Resize Handle */}
           <div
             onMouseDown={handleMouseDown}
             className="absolute left-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-accent-500/40 transition-colors z-10"
           />
-          <div className="p-4 bg-dark-800 border-b border-dark-700 flex justify-between items-center">
+          <div
+            className={`p-4 border-b flex justify-between items-center transition-all duration-500 ${
+              modeResponse === MODE_RESPONSE.GENERAL_RESPONSE
+                ? 'bg-dark-800 border-dark-700'
+                : 'bg-indigo-900 border-indigo-800'
+            }`}
+          >
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-accent-500 flex items-center justify-center text-white font-bold shadow-lg shadow-accent-500/30">
                 ✨
@@ -472,10 +485,13 @@ export default function ReclamationDetailsPage() {
             {chatMessages.map((msg, i) => (
               <div key={i} className={`flex flex-col ${msg.sender === 'HumanMessage' ? 'items-end' : 'items-start'}`}>
                 <div
-                  className={`max-w-[85%] p-3 rounded-2xl text-sm ${msg.sender === 'HumanMessage'
+                  className={`max-w-[85%] p-3 rounded-2xl text-sm transition-all duration-500 ${
+                    msg.sender === 'HumanMessage'
                       ? 'bg-primary-600 text-white rounded-tr-sm'
-                      : 'bg-dark-800 text-dark-100 rounded-tl-sm border border-dark-700'
-                    }`}
+                      : modeResponse === MODE_RESPONSE.GENERAL_RESPONSE
+                        ? 'bg-dark-800 text-dark-100 rounded-tl-sm border border-dark-700'
+                        : 'bg-indigo-900 text-dark-100 rounded-tl-sm border border-indigo-800'
+                  }`}
                 >
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
@@ -522,7 +538,13 @@ export default function ReclamationDetailsPage() {
             {/* Typing indicator — three bouncing dots */}
             {chatTyping && (
               <div className="flex items-start">
-                <div className="bg-dark-800 border border-dark-700 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1.5">
+                <div
+                  className={`border rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1.5 transition-all duration-500 ${
+                    modeResponse === MODE_RESPONSE.GENERAL_RESPONSE
+                      ? 'bg-dark-800 border-dark-700'
+                      : 'bg-indigo-900 border-indigo-800'
+                  }`}
+                >
                   <span className="w-2 h-2 bg-dark-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
                   <span className="w-2 h-2 bg-dark-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
                   <span className="w-2 h-2 bg-dark-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
@@ -533,12 +555,23 @@ export default function ReclamationDetailsPage() {
             <div ref={chatEndRef} />
           </div>
 
-          <form onSubmit={handleAgentChat} className="p-3 bg-dark-800 border-t border-dark-700 flex gap-2">
+          <form
+            onSubmit={handleAgentChat}
+            className={`p-3 border-t flex gap-2 transition-all duration-500 ${
+              modeResponse === MODE_RESPONSE.GENERAL_RESPONSE
+                ? 'bg-dark-800 border-dark-700'
+                : 'bg-indigo-900 border-indigo-800'
+            }`}
+          >
             <input
               type="text"
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
-              className="flex-1 bg-dark-900 border border-dark-600 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500 transition"
+              className={`flex-1 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500 transition-all duration-500 ${
+                modeResponse === MODE_RESPONSE.GENERAL_RESPONSE
+                  ? 'bg-dark-900 border border-dark-600'
+                  : 'bg-indigo-950 border border-indigo-800'
+              }`}
               placeholder="Ask agent for a reply..."
             />
             <button
