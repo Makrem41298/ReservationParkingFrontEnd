@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useToast } from '../../../components/Toast';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { reclamationsAPI } from '../reclamationsAPI';
@@ -11,6 +12,7 @@ export default function ReclamationDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
+  const toast = useToast();
 
   const [reclamation, setReclamation] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -111,7 +113,7 @@ export default function ReclamationDetailsPage() {
       navigate('/reclamations');
     } catch (err) {
       console.error(err);
-      alert('Error updating reclamation');
+      toast.error('Error updating reclamation');
     } finally {
       setReplyLoading(false);
     }
@@ -126,7 +128,7 @@ export default function ReclamationDetailsPage() {
       setIsEditing(false);
     } catch (err) {
       console.error(err);
-      alert('Error updating reclamation content');
+      toast.error('Error updating reclamation content');
     } finally {
       setEditLoading(false);
     }
@@ -137,10 +139,10 @@ export default function ReclamationDetailsPage() {
       setEditLoading(true);
       const res = await reclamationsAPI.update(id, { status: 'CLOSED' });
       setReclamation(res.data);
-      alert('Reclamation closed and resolved successfully!');
+      toast.success('Reclamation closed and resolved successfully!');
     } catch (err) {
       console.error(err);
-      alert('Error closing reclamation');
+      toast.error('Error closing reclamation');
     } finally {
       setEditLoading(false);
     }
@@ -151,10 +153,10 @@ export default function ReclamationDetailsPage() {
       setEditLoading(true);
       const res = await reclamationsAPI.update(id, { status: 'IN_PROGRESS' });
       setReclamation(res.data);
-      alert('Resolution refused. The reclamation status has returned to In Progress.');
+      toast.info('Resolution refused. The reclamation status has returned to In Progress.');
     } catch (err) {
       console.error(err);
-      alert('Error refusing resolution');
+      toast.error('Error refusing resolution');
     } finally {
       setEditLoading(false);
     }
@@ -173,7 +175,7 @@ export default function ReclamationDetailsPage() {
       setReplyText(response.data.answer);
     } catch (err) {
       console.error('Error generating AI reply:', err);
-      alert('Failed to generate AI reply. Please try again.');
+      toast.error('Failed to generate AI reply. Please try again.');
     } finally {
       setGenerateLoading(false);
     }

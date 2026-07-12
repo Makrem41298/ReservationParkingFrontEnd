@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ROLES } from './constants/roles';
 import GlobalChatbot from './components/GlobalChatbot';
+import { ToastProvider } from './components/Toast';
 
 // Layouts
 import AuthLayout from './layouts/AuthLayout';
@@ -41,22 +42,20 @@ import TransactionsPage from './features/payments/pages/TransactionsPage';
 function App() {
   return (
     <BrowserRouter>
+      <ToastProvider>
       <AuthProvider>
         <Routes>
-          {/* Public auth routes */}
           <Route element={<AuthLayout />}>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
           </Route>
 
-          {/* Public Landing Page */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/parking/:id" element={<ParkingDetailPage />} />
           <Route path="/parkings" element={<AllParkingsPage />} />
           <Route path="/payment-success" element={<PaymentSuccessPage />} />
           <Route path="/payment-cancel" element={<PaymentCancelPage />} />
 
-          {/* Protected routes */}
           <Route
             element={
               <ProtectedRoute>
@@ -75,7 +74,6 @@ function App() {
             <Route path="/reclamations/:id" element={<ReclamationDetailsPage />} />
             <Route path="/transactions" element={<TransactionsPage />} />
 
-            {/* Admin-only */}
             <Route
               path="/users"
               element={
@@ -102,13 +100,12 @@ function App() {
             />
           </Route>
 
-          {/* 404 */}
           <Route path="*" element={<NotFound />} />
         </Routes>
 
-        {/* Global AI Chatbot — visible on all pages except for admin/super admin */}
         <GlobalChatbot />
       </AuthProvider>
+      </ToastProvider>
     </BrowserRouter>
   );
 }

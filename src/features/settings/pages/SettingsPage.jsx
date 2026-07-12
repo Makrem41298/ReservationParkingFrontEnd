@@ -7,7 +7,6 @@ const ACCEPTED_TYPES = [
   '.json', '.txt', '.md',
 ];
 
-// Polling interval (ms) while the vectorstore is rebuilding
 const POLL_INTERVAL_BUILDING = 3000;
 const POLL_INTERVAL_IDLE = 15000;
 
@@ -23,18 +22,15 @@ export default function SettingsPage() {
   const [deleting, setDeleting] = useState(false);
   const inputRef = useRef(null);
 
-  // ─── Vectorstore rebuild status ──────────────────────────
-  const [vsStatus, setVsStatus] = useState(null); // { status, message, progress }
+  const [vsStatus, setVsStatus] = useState(null); 
   const [vsLoading, setVsLoading] = useState(true);
 
-  // ─── Fetch uploaded files ─────────────────────────────────
   const fetchUploadedFiles = async () => {
     try {
       setLoadingFiles(true);
       const res = await settingsAPI.getFiles();
       setUploadedFiles(res.data?.files || res.data || []);
     } catch {
-      // silently fail — list is not critical
       setUploadedFiles([]);
     } finally {
       setLoadingFiles(false);
@@ -45,7 +41,6 @@ export default function SettingsPage() {
     fetchUploadedFiles();
   }, []);
 
-  // ─── Fetch vectorstore status ────────────────────────────
   const fetchVsStatus = async () => {
     try {
       const res = await settingsAPI.getVectorstoreStatus();
@@ -57,7 +52,6 @@ export default function SettingsPage() {
     }
   };
 
-  // Poll vectorstore status — faster while processing, slower when idle
   useEffect(() => {
     fetchVsStatus();
 
@@ -66,7 +60,6 @@ export default function SettingsPage() {
     return () => clearInterval(interval);
   }, [vsStatus?.status]);
 
-  // ─── Drag & Drop handlers ────────────────────────────────
   const handleDrag = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -107,7 +100,6 @@ export default function SettingsPage() {
     setError(null);
   };
 
-  // ─── Upload ──────────────────────────────────────────────
   const handleUpload = async () => {
     if (files.length === 0) return;
     try {
@@ -118,7 +110,7 @@ export default function SettingsPage() {
       setUploadResult(res.data);
       setFiles([]);
       fetchUploadedFiles();
-      fetchVsStatus(); // Immediately check vectorstore rebuild status
+      fetchVsStatus(); 
     } catch (err) {
       setError(err?.response?.data?.message || err.message || 'Upload failed');
     } finally {
@@ -126,7 +118,6 @@ export default function SettingsPage() {
     }
   };
 
-  // ─── Mark / unmark file for deletion ──────────────────────
   const toggleFileForDeletion = (filename) => {
     setFilesToDelete((prev) => {
       const next = new Set(prev);
@@ -139,7 +130,6 @@ export default function SettingsPage() {
     });
   };
 
-  // ─── Confirm delete marked files ─────────────────────────
   const handleConfirmDelete = async () => {
     if (filesToDelete.size === 0) return;
     const count = filesToDelete.size;
@@ -150,7 +140,7 @@ export default function SettingsPage() {
       await settingsAPI.deleteFiles([...filesToDelete]);
       setFilesToDelete(new Set());
       fetchUploadedFiles();
-      fetchVsStatus(); // Immediately check vectorstore rebuild status
+      fetchVsStatus(); 
     } catch (err) {
       setError(err?.response?.data?.message || err.message || 'Delete failed');
     } finally {
@@ -158,7 +148,6 @@ export default function SettingsPage() {
     }
   };
 
-  // ─── Download uploaded file ───────────────────────────────
   const handleDownloadFile = async (filename) => {
     try {
       const res = await settingsAPI.downloadFile(filename);
@@ -175,7 +164,6 @@ export default function SettingsPage() {
     }
   };
 
-  // ─── Helpers ─────────────────────────────────────────────
   const formatSize = (bytes) => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -192,7 +180,6 @@ export default function SettingsPage() {
     return '📎';
   };
 
-  // Helper to detect vectorstore state
   const isVsProcessing = vsStatus?.status === 'processing';
   const isVsFailed = vsStatus?.status === 'failed';
   const isVsCompleted = vsStatus?.status === 'completed';

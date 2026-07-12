@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useToast } from '../../../components/Toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { reclamationsAPI } from '../reclamationsAPI';
 
 export default function ReclamationsListPage() {
   const { isAdmin } = useAuth();
+  const toast = useToast();
   const navigate = useNavigate();
   const [reclamations, setReclamations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +43,7 @@ export default function ReclamationsListPage() {
       setNewContent('');
       fetchReclamations();
     } catch (err) {
-      alert('Error creating reclamation');
+      toast.error('Error creating reclamation');
     }
   };
 

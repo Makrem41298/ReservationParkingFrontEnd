@@ -9,7 +9,6 @@ const api = axios.create({
   },
 });
 
-// Request interceptor — attach token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -21,67 +20,24 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor — handle 401 + token refresh
-let isRefreshing = false;
-let failedQueue = [];
-
-const processQueue = (error, token = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
-    }
-  });
-  failedQueue = [];
-};
-
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+  (error) => {
+    if (error.response?.status === 401) {
+      const requestUrl = error.config?.url;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (originalRequest.url === '/refresh' || originalRequest.url === '/login') {
+      if (requestUrl === '/login') {
         return Promise.reject(error);
       }
 
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return api(originalRequest);
-          })
-          .catch((err) => Promise.reject(err));
-      }
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
 
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      try {
-        const { data } = await api.post('/refresh');
-        const newToken = data.token;
-        localStorage.setItem('token', newToken);
-        api.defaults.headers.common.Authorization = `Bearer ${newToken}`;
-        processQueue(null, newToken);
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        return api(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError, null);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        // Only redirect to login if NOT on a public page
-        const publicPaths = ['/', '/parkings', '/login', '/register', '/payment-success', '/payment-cancel'];
-        const currentPath = window.location.pathname;
-        const isPublicPage = publicPaths.includes(currentPath) || currentPath.startsWith('/parking/');
-        if (!isPublicPage) {
-          window.location.href = '/login';
-        }
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
+      const publicPaths = ['/', '/parkings', '/login', '/register', '/payment-success', '/payment-cancel'];
+      const currentPath = window.location.pathname;
+      const isPublicPage = publicPaths.includes(currentPath) || currentPath.startsWith('/parking/');
+      if (!isPublicPage) {
+        window.location.href = '/login';
       }
     }
 

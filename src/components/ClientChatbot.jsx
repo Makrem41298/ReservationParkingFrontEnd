@@ -41,7 +41,6 @@ export default function ClientChatbot({ isAnonymous = false }) {
 
   useEffect(() => {
     if (!prevIsAnonymous.current && isAnonymous) {
-      // User logged out: reset messages and clear sessionId
       setMessages([
         {
           sender: 'IAMessage',
@@ -73,7 +72,7 @@ export default function ClientChatbot({ isAnonymous = false }) {
         sessionId: sessionId,
       });
 
-      if ((response.data.action === 'login' || response.data.authRequired) && isAnonymous && !useClientAgent) {
+      if ((response.data.action === 'login') && isAnonymous && !useClientAgent) {
         setShowLoginModal(true);
       }
 
@@ -149,10 +148,8 @@ export default function ClientChatbot({ isAnonymous = false }) {
       setShowLoginModal(false);
       setLoginForm({ email: '', password: '' });
 
-      // Find the last message sent by the user (HumanMessage)
       const lastUserMsg = [...messages].reverse().find(msg => msg.sender === 'HumanMessage');
       if (lastUserMsg) {
-        // Remove the sign-in prompt (last IAMessage) from the chat log
         setMessages((prev) => {
           const updated = [...prev];
           const lastIaIndex = updated.map(m => m.sender).lastIndexOf('IAMessage');
